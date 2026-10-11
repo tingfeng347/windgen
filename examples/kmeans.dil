@@ -1,0 +1,22 @@
+## K-means：空间中的分配与质心移动
+
+{@body const [step,setStep] = DIL.useState(0)}
+{@body const [selected,setSelected] = DIL.useState("p0")}
+{@body const points = [[0,0,0],[0,2,2],[8,0,0],[8,2,2]]}
+{@body const distance = (p,c)=>p.reduce((s,v,i)=>s+(v-c[i])**2,0)}
+{@body const assign = centers=>points.map(p=>distance(p,centers[0])<=distance(p,centers[1])?0:1)}
+{@body const histories = Array.from({length:7}).reduce((a,_,i)=>{if(!i)return [[[0,0,0],[8,0,0]]];const prev=a[i-1],labels=assign(prev);const next=prev.map((c,k)=>{const ps=points.filter((_,j)=>labels[j]===k);return ps.length?c.map((_,d)=>ps.reduce((s,p)=>s+p[d],0)/ps.length):c});return [...a,next]},[])}
+{@body const centers = histories[Math.floor(step/2)]}
+{@body const labels = assign(centers)}
+{@body const objective = points.reduce((s,p,i)=>s+distance(p,centers[labels[i]]),0)}
+{@body const colors = ["#607c9e","#8f83b0"]}
+{@body const objects = [...points.map((p,i)=>({id:"p"+i,type:"sphere",position:p,size:[.16,.16,.16],color:colors[labels[i]],label:"x"+i+" → 簇"+labels[i],value:JSON.stringify(p)})),...centers.map((p,i)=>({id:"c"+i,type:"box",position:p,size:[.3,.3,.3],color:colors[i],label:"质心 "+i})),...(step%2?points.map((p,i)=>({id:"edge"+i,type:"line",points:[p,centers[labels[i]]],color:colors[labels[i]]})):[])]}
+<box>
+<text>距离在真实三维特征空间计算。两阶段交替：按当前质心分配，再移动到每簇均值。平局选择编号较小的簇；空簇保留原质心。</text>
+<formula content={String.raw`c_i=\arg\min_k\|x_i-\mu_k\|^2,\quad\mu_k=\frac{1}{|C_k|}\sum_{i\in C_k}x_i`}/>
+<stepper value={step} onChange={setStep} max={12} label={step%2?"分配：显示到质心的连线":"更新：质心位于簇的均值"}/>
+<scene objects={objects} camera={[12,8,12]} selected={selected} onSelect={setSelected} caption="球体为数据，立方体为质心；旋转视角不改变分配。"/>
+<metric label="平方距离和 J" value={objective.toFixed(6)}/>
+<table columns={["数据点","簇","到所选质心的平方距离"]} rows={points.map((p,i)=>["x"+i,labels[i],distance(p,centers[labels[i]]).toFixed(3)])}/>
+<code>labels = points.map(nearestCenter); centers = clusterMeans(points, labels); // 所有分配先确定，再更新质心</code>
+</box>

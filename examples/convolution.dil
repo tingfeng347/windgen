@@ -1,0 +1,22 @@
+## 卷积：三维张量块中的滑动乘加
+
+{@body const [step,setStep] = DIL.useState(0)}
+{@body const [stride,setStride] = DIL.useState(1)}
+{@body const [selected,setSelected] = DIL.useState("input0")}
+{@body const input = [[1,2,3,4],[5,6,7,8],[9,10,11,12],[13,14,15,16]]}
+{@body const kernel = [[1,0],[0,-1]]}
+{@body const n = Math.floor((4-2)/stride)+1}
+{@body const pos = Math.min(step,n*n-1),r=Math.floor(pos/n)*stride,c=(pos%n)*stride}
+{@body const output = Array.from({length:n},(_,y)=>Array.from({length:n},(_,x)=>kernel.reduce((s,row,dy)=>s+row.reduce((v,k,dx)=>v+k*input[y*stride+dy][x*stride+dx],0),0)))}
+{@body const terms = kernel.flatMap((row,dy)=>row.map((k,dx)=>({x:input[r+dy][c+dx],k,product:input[r+dy][c+dx]*k})))}
+{@body const objects = [...input.flatMap((row,y)=>row.map((v,x)=>({id:"input"+(y*4+x),type:"box",position:[x-3,0,y-1.5],size:[.8,.25,.8],color:y>=r&&y<r+2&&x>=c&&x<c+2?"#cc9553":"#8da2b9",label:String(v)}))),...kernel.flatMap((row,y)=>row.map((v,x)=>({id:"kernel"+(y*2+x),type:"box",position:[c+x-3,1.3,r+y-1.5],size:[.8,.3,.8],color:"#8f83b0",label:"k="+v}))),...output.flatMap((row,y)=>row.map((v,x)=>({id:"output"+(y*n+x),type:"box",position:[x+3,0,y-1],size:[.8,.4,.8],color:y*n+x===pos?"#cc9553":"#6c7e91",label:String(v)})))]}
+<box>
+<text>输入 4×4、卷积核 2×2、padding=0。这里采用深度学习常见的互相关约定（不翻转卷积核）。紫色核滑动到橙色窗口，右侧是输出。</text>
+<formula content={String.raw`Y_{ij}=\sum_{u,v}K_{uv}X_{i s+u,j s+v},\quad H_{out}=\lfloor(H-K)/s\rfloor+1`}/>
+<slider label="步长 stride" min={1} max={2} step={1} value={stride} onChange={v=>{setStride(v);setStep(0)}}/>
+<stepper value={pos} onChange={setStep} max={n*n-1} label={"窗口 ("+r+", "+c+")"}/>
+<scene objects={objects} selected={selected} onSelect={setSelected} camera={[8,7,9]} caption="旋转观察输入、核与输出的空间关系；点击块查看标识。"/>
+<row><metric label="当前输出" value={output[Math.floor(pos/n)][pos%n]}/><metric label="输出形状" value={n+" × "+n}/><metric label="选中块" value={selected}/></row>
+<table columns={["输入值","核权重","乘积"]} rows={terms.map(t=>[t.x,t.k,t.product])}/>
+<code>for (u=0;u&lt;2;u++) for (v=0;v&lt;2;v++) sum += kernel[u][v] * input[i*stride+u][j*stride+v];</code>
+</box>

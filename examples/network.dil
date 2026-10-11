@@ -1,0 +1,22 @@
+## 反向传播：链式法则与同步权重更新
+
+{@body const [step,setStep] = DIL.useState(0)}
+{@body const [learningRate,setLearningRate] = DIL.useState(0.1)}
+{@body const [selected,setSelected] = DIL.useState("hidden")}
+{@body const sigmoid = x=>1/(1+Math.exp(-x))}
+{@body const forward = p=>{const z=p.w1+p.b1,a=sigmoid(z),yhat=p.w2*a+p.b2,loss=yhat*yhat/2;return {...p,z,a,yhat,loss,dw2:yhat*a,db2:yhat,dw1:yhat*p.w2*a*(1-a),db1:yhat*p.w2*a*(1-a)}}}
+{@body const history = Array.from({length:21}).reduce((a,_,i)=>{if(!i)return [forward({w1:0,b1:0,w2:2,b2:0})];const p=a[i-1];return [...a,forward({w1:p.w1-learningRate*p.dw1,b1:p.b1-learningRate*p.db1,w2:p.w2-learningRate*p.dw2,b2:p.b2-learningRate*p.db2})]},[])}
+{@body const current = history[Math.floor(step/4)]}
+{@body const phase = step%4}
+{@body const objects = [{id:"input",type:"sphere",position:[-2,0,0],size:[.3,.3,.3],color:"#6c7e91",label:"输入 x=1"},{id:"hidden",type:"sphere",position:[0,0,0],size:[.4,.4,.4],color:phase>=2?"#cc9553":"#607c9e",label:"sigmoid a="+current.a.toFixed(4)},{id:"output",type:"sphere",position:[2,0,0],size:[.3,.3,.3],color:"#8f83b0",label:"ŷ="+current.yhat.toFixed(4)},{id:"w1",type:"line",points:[[-2,0,0],[0,0,0]],color:phase>=2?"#cc9553":"#607c9e",width:4},{id:"w2",type:"line",points:[[0,0,0],[2,0,0]],color:phase>=2?"#cc9553":"#8f83b0",width:4}]}
+<box>
+<text>输入 x=1，目标 y=0；隐藏层 sigmoid，输出层线性，损失为平方误差的一半。反向步骤仅求导；完成梯度计算后同时更新全部参数。</text>
+<formula content={String.raw`a=\sigma(w_1x+b_1),\quad\hat y=w_2a+b_2,\quad J=\frac12(\hat y-y)^2`}/>
+<slider label="学习率 η" min={0.01} max={0.8} step={0.01} value={learningRate} onChange={v=>{setLearningRate(v);setStep(0)}}/>
+<stepper value={step} onChange={setStep} max={80} label={["前向传播","计算损失","反向求梯度（参数不变）","检查梯度；下一步应用更新"][phase]}/>
+<scene objects={objects} selected={selected} onSelect={setSelected} camera={[3,3,6]} caption="节点位置仅表示计算图布局；橙色表示梯度计算阶段。"/>
+<row><metric label="损失" value={current.loss.toFixed(6)}/><metric label="选中对象" value={selected}/></row>
+<table columns={["参数","当前值","当前梯度"]} rows={[["w1",current.w1.toFixed(5),current.dw1.toFixed(5)],["b1",current.b1.toFixed(5),current.db1.toFixed(5)],["w2",current.w2.toFixed(5),current.dw2.toFixed(5)],["b2",current.b2.toFixed(5),current.db2.toFixed(5)]]}/>
+<formula content={String.raw`\frac{\partial J}{\partial w_1}=(\hat y-y)w_2a(1-a)x`}/>
+<code>const delta2 = yhat - y; const delta1 = delta2 * w2 * a * (1-a); // 使用更新前的 w2。最后统一应用梯度。</code>
+</box>

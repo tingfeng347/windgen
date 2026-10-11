@@ -1,0 +1,24 @@
+## 注意力：从分数到空间中的信息汇聚
+
+{@body const [step,setStep] = DIL.useState(0)}
+{@body const [selected,setSelected] = DIL.useState("token0")}
+{@body const [temperature,setTemperature] = DIL.useState(1)}
+{@body const names = ["我","学习","算法"]}
+{@body const Q = [[1,0],[0,1],[1,1]],K=[[1,0],[0,1],[1,1]],V=[[1,0],[0,2],[1,1]]}
+{@body const index = Math.max(0,Number(String(selected).replace("token",""))||0)%3}
+{@body const scores = K.map(k=>Q[index].reduce((s,q,d)=>s+q*k[d],0)/(Math.sqrt(2)*temperature))}
+{@body const exps = scores.map(s=>Math.exp(s-Math.max(...scores)))}
+{@body const weights = exps.map(e=>e/exps.reduce((s,v)=>s+v,0))}
+{@body const output = [0,1].map(d=>weights.reduce((s,w,j)=>s+w*V[j][d],0))}
+{@body const positions = [[-2,0,-1],[0,1,1],[2,0,-1]]}
+{@body const objects = [...names.map((name,i)=>({id:"token"+i,type:"sphere",position:positions[i],size:[.35,.35,.35],color:i===index?"#cc9553":"#607c9e",label:name+"  α="+weights[i].toFixed(3)})),...(step>=1?positions.map((p,i)=>({id:"edge"+i,type:"line",points:[positions[index],[p[0],p[1]+.12,p[2]]],color:step>=2?"#8f83b0":"#8da2b9",width:1+weights[i]*6})):[]),{id:"summary",type:"box",position:[0,-1.5,0],size:[.55,.55,.55],color:"#6c7e91",label:step>=3?"输出 ["+output.map(v=>v.toFixed(3)).join(", ")+"]":"加权汇总"}]}
+<box>
+<text>三个 token 的 Q/K 维度为 2。点击 token 切换 query；空间位置仅为布局，连线粗细表示所选 query 的权重。每行 softmax 使用减最大值避免溢出。</text>
+<formula content={String.raw`A=\operatorname{softmax}(QK^T/(\sqrt{d_k}\,T)),\quad O=AV`}/>
+<slider label="温度 T" min={0.2} max={3} step={0.1} value={temperature} onChange={v=>{setTemperature(v);setStep(0)}}/>
+<stepper value={step} onChange={setStep} max={3} label={["选择 Query","计算 Q·K 分数","softmax 归一化","加权汇总 V"][step]}/>
+<scene objects={objects} selected={selected} onSelect={v=>{if(String(v).startsWith("token")){setSelected(v);setStep(0)}}} camera={[5,4,7]} caption="点选 token，逐步观察信息连接。"/>
+<row><metric label="当前 Query" value={names[index]}/><metric label="权重和" value={weights.reduce((a,b)=>a+b,0).toFixed(6)}/><metric label="输出向量" value={output.map(v=>v.toFixed(4)).join(", ")}/></row>
+<table columns={["Key","分数","权重 α","Value"]} rows={names.map((n,i)=>[n,scores[i].toFixed(4),weights[i].toFixed(4),V[i].join(", ")])}/>
+<code>scores = dot(q, k) / (sqrt(dk) * T); alpha = softmax(scores - max(scores)); output = sum(alpha[j] * value[j]);</code>
+</box>
