@@ -1,0 +1,67 @@
+import { test, expect } from '@playwright/test'
+
+const initial={configured:true,base_url:'https://api.deepseek.com',model:'deepseek-flash'}
+test('centered model settings saves without exposing or replacing the stored key',async({page})=>{
+  let saved:any
+  await page.route('**/api/config',async route=>{
+    if(route.request().method()==='PUT'){
+      saved=route.request().postDataJSON()
+      await route.fulfill({json:{...initial,model:saved.model}})
+    }else await route.fulfill({json:initial})
+  })
+  await page.route('**/api/config/test',route=>route.fulfill({json:{ok:true,message:'连接成功，模型可用'}}))
+  await page.goto('/')
+  const trigger=page.getByRole('button',{name:'模型配置',exact:true})
+  await trigger.click()
+  const dialog=page.getByRole('dialog',{name:'模型配置'})
+  await expect(dialog).toBeVisible()
+  await expect(page.getByLabel('API Key',{exact:true})).toHaveValue('')
+  const box=await dialog.boundingBox()
+  expect(Math.abs(box!.x+box!.width/2-640)).toBeLessThan(2)
+  await page.screenshot({path:'test-results/model-desktop.png',fullPage:true,animations:'disabled'})
+  await page.getByRole('textbox',{name:'模型 ID',exact:true}).fill('lesson-model')
+  await page.getByRole('button',{name:'测试连接',exact:true}).click()
+  await expect(page.getByRole('status')).toContainText('连接成功')
+  await page.getByRole('button',{name:'保存配置',exact:true}).click()
+  await expect(page.getByRole('status')).toContainText('配置已保存')
+  expect(saved.api_key).toBeNull()
+  expect(saved.model).toBe('lesson-model')
+  await page.getByRole('button',{name:'完成',exact:true}).click()
+  await expect(dialog).not.toBeVisible()
+  await expect(trigger).toBeFocused()
+  await expect(page.locator('.header-model')).toHaveText('lesson-model')
+})
+
+test('mobile provider drafts, key visibility, error recovery and focus stay in the dialog',async({page})=>{
+  await page.setViewportSize({width:390,height:844})
+  let writes=0
+  await page.route('**/api/config',route=>{if(route.request().method()==='PUT')writes++;return route.fulfill({json:initial})})
+  await page.route('**/api/config/test',route=>route.fulfill({status:400,json:{detail:'连接失败（HTTP 401），请检查接口地址和密钥'}}))
+  await page.goto('/')
+  const trigger=page.getByRole('button',{name:'模型配置',exact:true})
+  await trigger.click()
+  const dialog=page.getByRole('dialog',{name:'模型配置'})
+  await expect(dialog).toBeVisible()
+  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true)
+  await page.screenshot({path:'test-results/model-mobile.png',fullPage:true,animations:'disabled'})
+  for(let i=0;i<12;i++){
+    await page.keyboard.press('Tab')
+    expect(await page.evaluate(()=>Boolean(document.activeElement?.closest('[role="dialog"]')))).toBe(true)
+  }
+  await page.getByRole('button',{name:/自定义接口/}).click()
+  await expect(page.getByRole('button',{name:'保存配置',exact:true})).toBeDisabled()
+  await page.getByRole('textbox',{name:'接口地址'}).fill('https://example.invalid/v1')
+  await page.getByRole('textbox',{name:'模型 ID',exact:true}).fill('tutorial-model')
+  const key=page.getByLabel('API Key',{exact:true})
+  await key.fill('test-placeholder-only')
+  await page.getByRole('button',{name:'显示新密钥'}).click()
+  await expect(key).toHaveAttribute('type','text')
+  await page.getByRole('button',{name:'隐藏新密钥'}).click()
+  await expect(key).toHaveAttribute('type','password')
+  await page.getByRole('button',{name:'测试连接',exact:true}).click()
+  await expect(page.getByRole('alert')).toContainText('HTTP 401')
+  await page.keyboard.press('Escape')
+  await expect(dialog).not.toBeVisible()
+  await expect(trigger).toBeFocused()
+  expect(writes).toBe(0)
+})
