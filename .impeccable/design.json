@@ -1,0 +1,631 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-11T12:09:47.709043+00:00",
+  "title": "Design System: WindGen",
+  "extensions": {
+    "colorMeta": {
+      "primary": {
+        "role": "primary",
+        "displayName": "炭黑",
+        "canonical": "#292724",
+        "tonalRamp": [
+          "oklch(15% 0.00619 78.22)",
+          "oklch(26% 0.00619 78.22)",
+          "oklch(38% 0.00619 78.22)",
+          "oklch(49% 0.00619 78.22)",
+          "oklch(61% 0.00619 78.22)",
+          "oklch(72% 0.00619 78.22)",
+          "oklch(84% 0.00619 78.22)",
+          "oklch(95% 0.00619 78.22)"
+        ]
+      },
+      "background": {
+        "role": "neutral",
+        "displayName": "暖纸",
+        "canonical": "#fdfcf9",
+        "tonalRamp": [
+          "oklch(15% 0.00410 91.45)",
+          "oklch(26% 0.00410 91.45)",
+          "oklch(38% 0.00410 91.45)",
+          "oklch(49% 0.00410 91.45)",
+          "oklch(61% 0.00410 91.45)",
+          "oklch(72% 0.00410 91.45)",
+          "oklch(84% 0.00410 91.45)",
+          "oklch(95% 0.00410 91.45)"
+        ]
+      },
+      "foreground": {
+        "role": "neutral",
+        "displayName": "正文墨色",
+        "canonical": "#2c2924",
+        "tonalRamp": [
+          "oklch(15% 0.00995 80.64)",
+          "oklch(26% 0.00995 80.64)",
+          "oklch(38% 0.00995 80.64)",
+          "oklch(49% 0.00995 80.64)",
+          "oklch(61% 0.00995 80.64)",
+          "oklch(72% 0.00995 80.64)",
+          "oklch(84% 0.00995 80.64)",
+          "oklch(95% 0.00995 80.64)"
+        ]
+      },
+      "secondary": {
+        "role": "neutral",
+        "displayName": "辅助暖灰",
+        "canonical": "#eeeae3",
+        "tonalRamp": [
+          "oklch(15% 0.01031 81.79)",
+          "oklch(26% 0.01031 81.79)",
+          "oklch(38% 0.01031 81.79)",
+          "oklch(49% 0.01031 81.79)",
+          "oklch(61% 0.01031 81.79)",
+          "oklch(72% 0.01031 81.79)",
+          "oklch(84% 0.01031 81.79)",
+          "oklch(95% 0.01031 81.79)"
+        ]
+      },
+      "border": {
+        "role": "neutral",
+        "displayName": "border",
+        "canonical": "#e2e0dc",
+        "tonalRamp": [
+          "oklch(15% 0.00582 84.57)",
+          "oklch(26% 0.00582 84.57)",
+          "oklch(38% 0.00582 84.57)",
+          "oklch(49% 0.00582 84.57)",
+          "oklch(61% 0.00582 84.57)",
+          "oklch(72% 0.00582 84.57)",
+          "oklch(84% 0.00582 84.57)",
+          "oklch(95% 0.00582 84.57)"
+        ]
+      },
+      "sidebar": {
+        "role": "neutral",
+        "displayName": "侧栏暖灰",
+        "canonical": "#f3f0e9",
+        "tonalRamp": [
+          "oklch(15% 0.00985 87.47)",
+          "oklch(26% 0.00985 87.47)",
+          "oklch(38% 0.00985 87.47)",
+          "oklch(49% 0.00985 87.47)",
+          "oklch(61% 0.00985 87.47)",
+          "oklch(72% 0.00985 87.47)",
+          "oklch(84% 0.00985 87.47)",
+          "oklch(95% 0.00985 87.47)"
+        ]
+      },
+      "sidebar-active": {
+        "role": "neutral",
+        "displayName": "sidebar-active",
+        "canonical": "#e6e1d8",
+        "tonalRamp": [
+          "oklch(15% 0.01327 82.40)",
+          "oklch(26% 0.01327 82.40)",
+          "oklch(38% 0.01327 82.40)",
+          "oklch(49% 0.01327 82.40)",
+          "oklch(61% 0.01327 82.40)",
+          "oklch(72% 0.01327 82.40)",
+          "oklch(84% 0.01327 82.40)",
+          "oklch(95% 0.01327 82.40)"
+        ]
+      },
+      "scene": {
+        "role": "neutral",
+        "displayName": "场景暖灰",
+        "canonical": "#f4f1ec",
+        "tonalRamp": [
+          "oklch(15% 0.00740 80.72)",
+          "oklch(26% 0.00740 80.72)",
+          "oklch(38% 0.00740 80.72)",
+          "oklch(49% 0.00740 80.72)",
+          "oklch(61% 0.00740 80.72)",
+          "oklch(72% 0.00740 80.72)",
+          "oklch(84% 0.00740 80.72)",
+          "oklch(95% 0.00740 80.72)"
+        ]
+      },
+      "mist-blue": {
+        "role": "secondary",
+        "displayName": "雾蓝",
+        "canonical": "#607c9e",
+        "tonalRamp": [
+          "oklch(15% 0.06189 253.63)",
+          "oklch(26% 0.06189 253.63)",
+          "oklch(38% 0.06189 253.63)",
+          "oklch(49% 0.06189 253.63)",
+          "oklch(61% 0.06189 253.63)",
+          "oklch(72% 0.06189 253.63)",
+          "oklch(84% 0.06189 253.63)",
+          "oklch(95% 0.06189 253.63)"
+        ]
+      },
+      "lavender": {
+        "role": "secondary",
+        "displayName": "灰紫",
+        "canonical": "#8f83b0",
+        "tonalRamp": [
+          "oklch(15% 0.06773 296.66)",
+          "oklch(26% 0.06773 296.66)",
+          "oklch(38% 0.06773 296.66)",
+          "oklch(49% 0.06773 296.66)",
+          "oklch(61% 0.06773 296.66)",
+          "oklch(72% 0.06773 296.66)",
+          "oklch(84% 0.06773 296.66)",
+          "oklch(95% 0.06773 296.66)"
+        ]
+      },
+      "amber": {
+        "role": "tertiary",
+        "displayName": "琥珀",
+        "canonical": "#cc9553",
+        "tonalRamp": [
+          "oklch(15% 0.10634 69.66)",
+          "oklch(26% 0.10634 69.66)",
+          "oklch(38% 0.10634 69.66)",
+          "oklch(49% 0.10634 69.66)",
+          "oklch(61% 0.10634 69.66)",
+          "oklch(72% 0.10634 69.66)",
+          "oklch(84% 0.10634 69.66)",
+          "oklch(95% 0.10634 69.66)"
+        ]
+      },
+      "text-muted": {
+        "role": "neutral",
+        "displayName": "柔灰文字",
+        "canonical": "#706b63",
+        "tonalRamp": [
+          "oklch(15% 0.01377 79.74)",
+          "oklch(26% 0.01377 79.74)",
+          "oklch(38% 0.01377 79.74)",
+          "oklch(49% 0.01377 79.74)",
+          "oklch(61% 0.01377 79.74)",
+          "oklch(72% 0.01377 79.74)",
+          "oklch(84% 0.01377 79.74)",
+          "oklch(95% 0.01377 79.74)"
+        ]
+      },
+      "text-support": {
+        "role": "neutral",
+        "displayName": "辅助灰字",
+        "canonical": "#6f6961",
+        "tonalRamp": [
+          "oklch(15% 0.01444 75.26)",
+          "oklch(26% 0.01444 75.26)",
+          "oklch(38% 0.01444 75.26)",
+          "oklch(49% 0.01444 75.26)",
+          "oklch(61% 0.01444 75.26)",
+          "oklch(72% 0.01444 75.26)",
+          "oklch(84% 0.01444 75.26)",
+          "oklch(95% 0.01444 75.26)"
+        ]
+      },
+      "formula-surface": {
+        "role": "neutral",
+        "displayName": "formula-surface",
+        "canonical": "#f5f2ed",
+        "tonalRamp": [
+          "oklch(15% 0.00739 80.72)",
+          "oklch(26% 0.00739 80.72)",
+          "oklch(38% 0.00739 80.72)",
+          "oklch(49% 0.00739 80.72)",
+          "oklch(61% 0.00739 80.72)",
+          "oklch(72% 0.00739 80.72)",
+          "oklch(84% 0.00739 80.72)",
+          "oklch(95% 0.00739 80.72)"
+        ]
+      },
+      "composer-surface": {
+        "role": "neutral",
+        "displayName": "composer-surface",
+        "canonical": "#f1eee8",
+        "tonalRamp": [
+          "oklch(15% 0.00863 84.57)",
+          "oklch(26% 0.00863 84.57)",
+          "oklch(38% 0.00863 84.57)",
+          "oklch(49% 0.00863 84.57)",
+          "oklch(61% 0.00863 84.57)",
+          "oklch(72% 0.00863 84.57)",
+          "oklch(84% 0.00863 84.57)",
+          "oklch(95% 0.00863 84.57)"
+        ]
+      },
+      "caption-surface": {
+        "role": "neutral",
+        "displayName": "caption-surface",
+        "canonical": "#eeebe5",
+        "tonalRamp": [
+          "oklch(15% 0.00865 84.57)",
+          "oklch(26% 0.00865 84.57)",
+          "oklch(38% 0.00865 84.57)",
+          "oklch(49% 0.00865 84.57)",
+          "oklch(61% 0.00865 84.57)",
+          "oklch(72% 0.00865 84.57)",
+          "oklch(84% 0.00865 84.57)",
+          "oklch(95% 0.00865 84.57)"
+        ]
+      },
+      "revision-selected": {
+        "role": "neutral",
+        "displayName": "revision-selected",
+        "canonical": "#e7edf4",
+        "tonalRamp": [
+          "oklch(15% 0.01143 252.09)",
+          "oklch(26% 0.01143 252.09)",
+          "oklch(38% 0.01143 252.09)",
+          "oklch(49% 0.01143 252.09)",
+          "oklch(61% 0.01143 252.09)",
+          "oklch(72% 0.01143 252.09)",
+          "oklch(84% 0.01143 252.09)",
+          "oklch(95% 0.01143 252.09)"
+        ]
+      },
+      "revision-ink": {
+        "role": "neutral",
+        "displayName": "revision-ink",
+        "canonical": "#384f6b",
+        "tonalRamp": [
+          "oklch(15% 0.05494 253.83)",
+          "oklch(26% 0.05494 253.83)",
+          "oklch(38% 0.05494 253.83)",
+          "oklch(49% 0.05494 253.83)",
+          "oklch(61% 0.05494 253.83)",
+          "oklch(72% 0.05494 253.83)",
+          "oklch(84% 0.05494 253.83)",
+          "oklch(95% 0.05494 253.83)"
+        ]
+      },
+      "revision-border": {
+        "role": "neutral",
+        "displayName": "revision-border",
+        "canonical": "#ccd6e2",
+        "tonalRamp": [
+          "oklch(15% 0.01983 252.89)",
+          "oklch(26% 0.01983 252.89)",
+          "oklch(38% 0.01983 252.89)",
+          "oklch(49% 0.01983 252.89)",
+          "oklch(61% 0.01983 252.89)",
+          "oklch(72% 0.01983 252.89)",
+          "oklch(84% 0.01983 252.89)",
+          "oklch(95% 0.01983 252.89)"
+        ]
+      },
+      "user-surface": {
+        "role": "neutral",
+        "displayName": "user-surface",
+        "canonical": "#f2f1f0",
+        "tonalRamp": [
+          "oklch(15% 0.00172 67.80)",
+          "oklch(26% 0.00172 67.80)",
+          "oklch(38% 0.00172 67.80)",
+          "oklch(49% 0.00172 67.80)",
+          "oklch(61% 0.00172 67.80)",
+          "oklch(72% 0.00172 67.80)",
+          "oklch(84% 0.00172 67.80)",
+          "oklch(95% 0.00172 67.80)"
+        ]
+      },
+      "error": {
+        "role": "neutral",
+        "displayName": "error",
+        "canonical": "#9d4436",
+        "tonalRamp": [
+          "oklch(15% 0.12199 30.89)",
+          "oklch(26% 0.12199 30.89)",
+          "oklch(38% 0.12199 30.89)",
+          "oklch(49% 0.12199 30.89)",
+          "oklch(61% 0.12199 30.89)",
+          "oklch(72% 0.12199 30.89)",
+          "oklch(84% 0.12199 30.89)",
+          "oklch(95% 0.12199 30.89)"
+        ]
+      },
+      "error-surface": {
+        "role": "neutral",
+        "displayName": "error-surface",
+        "canonical": "#fff0e8",
+        "tonalRamp": [
+          "oklch(15% 0.01949 50.16)",
+          "oklch(26% 0.01949 50.16)",
+          "oklch(38% 0.01949 50.16)",
+          "oklch(49% 0.01949 50.16)",
+          "oklch(61% 0.01949 50.16)",
+          "oklch(72% 0.01949 50.16)",
+          "oklch(84% 0.01949 50.16)",
+          "oklch(95% 0.01949 50.16)"
+        ]
+      },
+      "destructive": {
+        "role": "neutral",
+        "displayName": "destructive",
+        "canonical": "#b54132",
+        "tonalRamp": [
+          "oklch(15% 0.15352 30.22)",
+          "oklch(26% 0.15352 30.22)",
+          "oklch(38% 0.15352 30.22)",
+          "oklch(49% 0.15352 30.22)",
+          "oklch(61% 0.15352 30.22)",
+          "oklch(72% 0.15352 30.22)",
+          "oklch(84% 0.15352 30.22)",
+          "oklch(95% 0.15352 30.22)"
+        ]
+      },
+      "grid-major": {
+        "role": "neutral",
+        "displayName": "grid-major",
+        "canonical": "#cfc8bc",
+        "tonalRamp": [
+          "oklch(15% 0.01820 81.32)",
+          "oklch(26% 0.01820 81.32)",
+          "oklch(38% 0.01820 81.32)",
+          "oklch(49% 0.01820 81.32)",
+          "oklch(61% 0.01820 81.32)",
+          "oklch(72% 0.01820 81.32)",
+          "oklch(84% 0.01820 81.32)",
+          "oklch(95% 0.01820 81.32)"
+        ]
+      },
+      "grid-minor": {
+        "role": "neutral",
+        "displayName": "grid-minor",
+        "canonical": "#e5dfd5",
+        "tonalRamp": [
+          "oklch(15% 0.01497 80.70)",
+          "oklch(26% 0.01497 80.70)",
+          "oklch(38% 0.01497 80.70)",
+          "oklch(49% 0.01497 80.70)",
+          "oklch(61% 0.01497 80.70)",
+          "oklch(72% 0.01497 80.70)",
+          "oklch(84% 0.01497 80.70)",
+          "oklch(95% 0.01497 80.70)"
+        ]
+      },
+      "label-ink": {
+        "role": "neutral",
+        "displayName": "label-ink",
+        "canonical": "#38342e",
+        "tonalRamp": [
+          "oklch(15% 0.01178 78.15)",
+          "oklch(26% 0.01178 78.15)",
+          "oklch(38% 0.01178 78.15)",
+          "oklch(49% 0.01178 78.15)",
+          "oklch(61% 0.01178 78.15)",
+          "oklch(72% 0.01178 78.15)",
+          "oklch(84% 0.01178 78.15)",
+          "oklch(95% 0.01178 78.15)"
+        ]
+      },
+      "label-selected": {
+        "role": "neutral",
+        "displayName": "label-selected",
+        "canonical": "#fff0db",
+        "tonalRamp": [
+          "oklch(15% 0.03207 76.46)",
+          "oklch(26% 0.03207 76.46)",
+          "oklch(38% 0.03207 76.46)",
+          "oklch(49% 0.03207 76.46)",
+          "oklch(61% 0.03207 76.46)",
+          "oklch(72% 0.03207 76.46)",
+          "oklch(84% 0.03207 76.46)",
+          "oklch(95% 0.03207 76.46)"
+        ]
+      },
+      "label-selected-ink": {
+        "role": "neutral",
+        "displayName": "label-selected-ink",
+        "canonical": "#714827",
+        "tonalRamp": [
+          "oklch(15% 0.07340 58.09)",
+          "oklch(26% 0.07340 58.09)",
+          "oklch(38% 0.07340 58.09)",
+          "oklch(49% 0.07340 58.09)",
+          "oklch(61% 0.07340 58.09)",
+          "oklch(72% 0.07340 58.09)",
+          "oklch(84% 0.07340 58.09)",
+          "oklch(95% 0.07340 58.09)"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "display",
+        "purpose": "欢迎页标题；移动端按现有断点缩放。"
+      },
+      "headline": {
+        "displayName": "headline",
+        "purpose": "教程内标题。"
+      },
+      "title": {
+        "displayName": "title",
+        "purpose": "现有界面的 title 层级。"
+      },
+      "body": {
+        "displayName": "body",
+        "purpose": "教程正文与提问输入。"
+      },
+      "label": {
+        "displayName": "label",
+        "purpose": "现有界面的 label 层级。"
+      },
+      "metric": {
+        "displayName": "metric",
+        "purpose": "现有界面的 metric 层级。"
+      },
+      "code": {
+        "displayName": "code",
+        "purpose": "源码和序列化状态。"
+      },
+      "scene-label": {
+        "displayName": "scene-label",
+        "purpose": "纹理折算的约 14px 屏幕文字，不是普通 CSS 标签。"
+      }
+    },
+    "shadows": [
+      {
+        "name": "composer-ambient",
+        "value": "0 5px 18px -12px #25352d26",
+        "purpose": "输入框的环境深度。"
+      },
+      {
+        "name": "control-xs",
+        "value": "0 1px 2px 0 rgb(0 0 0 / .05)",
+        "purpose": "轮廓按钮。"
+      },
+      {
+        "name": "control-sm",
+        "value": "0 1px 3px 0 rgb(0 0 0 / .1), 0 1px 2px -1px rgb(0 0 0 / .1)",
+        "purpose": "活动标签与滑块拇指。"
+      }
+    ],
+    "motion": [
+      {
+        "name": "control-transition",
+        "value": "150ms cubic-bezier(0.4, 0, 0.2, 1)",
+        "purpose": "Tailwind 组件的默认状态过渡。"
+      },
+      {
+        "name": "sidebar-drawer",
+        "value": "transform 200ms ease",
+        "purpose": "手机会话栏进出。"
+      },
+      {
+        "name": "loading-pulse",
+        "value": "blink 1.2s ease-in-out infinite; 50% opacity: 0.35",
+        "purpose": "正在准备教程；减少动态效果时禁用。"
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "compact-desktop",
+        "value": "1000px"
+      },
+      {
+        "name": "mobile-drawer",
+        "value": "720px"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "主要按钮",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "源于现有按钮变体；hover、键盘焦点与禁用态独立可预览。",
+      "html": "<button class=\"ds-button-primary\"> 播放</button>",
+      "css": ".ds-button-primary{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:36px;padding:8px 16px;border:0;border-radius:8px;font-size:14px;font-weight:500;white-space:nowrap;cursor:pointer;transition:background .15s,box-shadow .15s;font-family:-apple-system,BlinkMacSystemFont,\"Segoe UI\",\"PingFang SC\",sans-serif;line-height:1.65;background:#292724;color:#fdfcf9;border:0;}.ds-button-primary:hover{background:rgba(41,39,36,.9)}.ds-button-primary:focus-visible{outline:2px solid #607c9e;outline-offset:3px;box-shadow:0 0 0 3px rgba(41,39,36,.5)}.ds-button-primary:disabled{opacity:.5;pointer-events:none}"
+    },
+    {
+      "name": "辅助按钮",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "源于现有按钮变体；hover、键盘焦点与禁用态独立可预览。",
+      "html": "<button class=\"ds-button-secondary\"> 暂停</button>",
+      "css": ".ds-button-secondary{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:36px;padding:8px 16px;border:0;border-radius:8px;font-size:14px;font-weight:500;white-space:nowrap;cursor:pointer;transition:background .15s,box-shadow .15s;font-family:-apple-system,BlinkMacSystemFont,\"Segoe UI\",\"PingFang SC\",sans-serif;line-height:1.65;background:#eeeae3;color:#2c2924;border:0;}.ds-button-secondary:hover{background:rgba(238,234,227,.8)}.ds-button-secondary:focus-visible{outline:2px solid #607c9e;outline-offset:3px;box-shadow:0 0 0 3px rgba(41,39,36,.5)}.ds-button-secondary:disabled{opacity:.5;pointer-events:none}"
+    },
+    {
+      "name": "轮廓按钮",
+      "kind": "button",
+      "refersTo": "button-outline",
+      "description": "源于现有按钮变体；hover、键盘焦点与禁用态独立可预览。",
+      "html": "<button class=\"ds-button-outline\"> 新教程</button>",
+      "css": ".ds-button-outline{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:36px;padding:8px 16px;border:0;border-radius:8px;font-size:14px;font-weight:500;white-space:nowrap;cursor:pointer;transition:background .15s,box-shadow .15s;font-family:-apple-system,BlinkMacSystemFont,\"Segoe UI\",\"PingFang SC\",sans-serif;line-height:1.65;background:#fdfcf9;color:#2c2924;border:1px solid #e2e0dc;}.ds-button-outline:hover{background:#eeeae3}.ds-button-outline:focus-visible{outline:2px solid #607c9e;outline-offset:3px;box-shadow:0 0 0 3px rgba(41,39,36,.5)}.ds-button-outline:disabled{opacity:.5;pointer-events:none}"
+    },
+    {
+      "name": "透明按钮",
+      "kind": "button",
+      "refersTo": "button-ghost",
+      "description": "源于现有按钮变体；hover、键盘焦点与禁用态独立可预览。",
+      "html": "<button class=\"ds-button-ghost\"> 重置</button>",
+      "css": ".ds-button-ghost{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:36px;padding:8px 16px;border:0;border-radius:8px;font-size:14px;font-weight:500;white-space:nowrap;cursor:pointer;transition:background .15s,box-shadow .15s;font-family:-apple-system,BlinkMacSystemFont,\"Segoe UI\",\"PingFang SC\",sans-serif;line-height:1.65;background:transparent;color:#2c2924;border:0;height:32px;padding:0 12px;}.ds-button-ghost:hover{background:#eeeae3}.ds-button-ghost:focus-visible{outline:2px solid #607c9e;outline-offset:3px;box-shadow:0 0 0 3px rgba(41,39,36,.5)}.ds-button-ghost:disabled{opacity:.5;pointer-events:none}"
+    },
+    {
+      "name": "参数字段",
+      "kind": "input",
+      "refersTo": "parameter-input",
+      "description": "标签和参数值在同一行；数值采用 tabular-nums。",
+      "html": "<label class=\"ds-parameter\"><span class=\"ds-parameter-title\">学习率 <output class=\"ds-parameter-value\">0.10</output></span><input class=\"ds-parameter-input\" type=\"number\" value=\"0.1\" step=\"0.01\" aria-label=\"学习率\"></label>",
+      "css": ".ds-parameter{display:block;max-width:400px;font-size:12px;font-family:-apple-system,BlinkMacSystemFont,\"Segoe UI\",\"PingFang SC\",sans-serif;line-height:1.65;}.ds-parameter-title{display:flex;justify-content:space-between;margin-bottom:16px;color:#5c564d}.ds-parameter-value{font-variant-numeric:tabular-nums;color:#526b88;font-weight:600}.ds-parameter-input{width:100%;padding:8px 10px;border:1px solid #e1dfdc;border-radius:6px;background:#fdfcf9;color:#2c2924;font:inherit;caret-color:#6f6961}.ds-parameter-input:focus-visible{outline:2px solid #607c9e;outline-offset:3px;} .ds-parameter-input:disabled{opacity:.5}"
+    },
+    {
+      "name": "会话导航",
+      "kind": "nav",
+      "refersTo": "history-nav",
+      "description": "暖灰列表，当前会话与 hover 使用相同的暖灰层级；行不收缩。",
+      "html": "<nav class=\"ds-history\" aria-label=\"会话历史\"><button class=\"ds-history-row ds-history-active\" aria-current=\"page\">三维梯度下降</button><button class=\"ds-history-row\">K-means 聚类的更新过程</button></nav>",
+      "css": ".ds-history{display:flex;flex-direction:column;gap:5px;width:248px;padding:18px;background:#f3f0e9;font-family:-apple-system,BlinkMacSystemFont,\"Segoe UI\",\"PingFang SC\",sans-serif;line-height:1.65;}.ds-history-row{flex-shrink:0;border:0;background:transparent;padding:10px 12px;text-align:left;color:#605c54;font-family:inherit;font-size:13px;border-radius:8px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:pointer}.ds-history-row:hover,.ds-history-active{background:#e6e1d8;color:#292724}.ds-history-row:focus-visible{outline:2px solid #607c9e;outline-offset:3px;}"
+    },
+    {
+      "name": "版本按钮",
+      "kind": "chip",
+      "refersTo": "revision-chip",
+      "description": "当前版本用冷灰蓝底与深灰蓝文字；未选中保持暖灰。",
+      "html": "<div class=\"ds-revisions\"><button class=\"ds-revision\">版本 1</button><button class=\"ds-revision ds-revision-selected\" aria-pressed=\"true\">版本 2</button></div>",
+      "css": ".ds-revisions{display:flex;gap:8px;overflow:auto;font-family:-apple-system,BlinkMacSystemFont,\"Segoe UI\",\"PingFang SC\",sans-serif;line-height:1.65;}.ds-revision{border:1px solid transparent;background:#f1eee8;padding:5px 13px;border-radius:7px;font-family:inherit;font-size:12px;white-space:nowrap;color:#716c64;cursor:pointer}.ds-revision-selected{color:#384f6b;background:#e7edf4;border-color:#ccd6e2}.ds-revision:hover{background:#eeeae3}.ds-revision-selected:hover{background:#e7edf4}.ds-revision:focus-visible{outline:2px solid #607c9e;outline-offset:3px;}"
+    },
+    {
+      "name": "底部输入框",
+      "kind": "card",
+      "refersTo": "composer",
+      "description": "暖灰面与轻微环境阴影承载连续提问；图标为内联 SVG。",
+      "html": "<form class=\"ds-composer\"><textarea class=\"ds-composer-text\" rows=\"2\" aria-label=\"输入教程需求\" placeholder=\"按当前参数继续提问，或修改这个演示…\"></textarea><div class=\"ds-composer-bottom\"><span>本地交互 · 当前状态随对话同步</span><button class=\"ds-send\" type=\"button\" aria-label=\"发送\"><svg width=\"19\" height=\"19\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"m5 12 7-7 7 7M12 19V5\"/></svg></button></div></form>",
+      "css": ".ds-composer{max-width:860px;background:#f1eee8;border:1px solid #e4e2de;border-radius:16px;padding:15px 17px 12px;box-shadow:0 5px 18px -12px #25352d26;font-family:-apple-system,BlinkMacSystemFont,\"Segoe UI\",\"PingFang SC\",sans-serif;line-height:1.65;}.ds-composer-text{display:block;resize:none;border:0;outline:none;background:none;width:100%;font-family:inherit;font-size:14px;min-height:45px;color:#39352f;caret-color:#6f6961}.ds-composer-text::placeholder{color:#6f6961}.ds-composer-text:focus-visible{outline:2px solid #607c9e;outline-offset:3px;}.ds-composer-bottom{display:flex;align-items:center;justify-content:space-between;margin-top:10px;color:#6f6961;font-size:10px}.ds-send{display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;border:0;border-radius:8px;background:#292724;color:#fdfcf9;cursor:pointer;transition:background .15s}.ds-send:hover{background:rgba(41,39,36,.9)}.ds-send:focus-visible{outline:2px solid #607c9e;outline-offset:3px;}"
+    },
+    {
+      "name": "三维课堂容器",
+      "kind": "custom",
+      "refersTo": "scene",
+      "description": "仅预览现有容器、角色标签与检查器；实际应用中的场景由 Three.js 几何渲染。",
+      "html": "<figure class=\"ds-scene\"><div class=\"ds-scene-toolbar\">三维演示<button class=\"ds-scene-reset\">复位视角</button></div><div class=\"ds-scene-preview\"><span class=\"ds-object-label\">质心 1</span><span class=\"ds-object-label ds-object-selected\">当前参数</span><div class=\"ds-scene-hint\">拖动旋转 · 滚轮缩放 · 点击选择</div><div class=\"ds-scene-inspector\"><strong>particle-1</strong><span>当前参数</span><code>[1.2, 0.6, 0.4]</code></div></div><figcaption class=\"ds-scene-caption\">参数移动与数值更新对应。</figcaption></figure>",
+      "css": ".ds-scene{margin:0;background:#f4f1ec;border-radius:12px;overflow:hidden;font-family:-apple-system,BlinkMacSystemFont,\"Segoe UI\",\"PingFang SC\",sans-serif;line-height:1.65;}.ds-scene-toolbar{display:flex;align-items:center;justify-content:space-between;padding:9px 15px;font-size:11px;color:#6d675c}.ds-scene-reset{border:0;background:transparent;color:#2c2924;border-radius:8px;padding:0 12px;height:32px;font:inherit;cursor:pointer}.ds-scene-reset:hover{background:#eeeae3}.ds-scene-reset:focus-visible{outline:2px solid #607c9e;outline-offset:3px;}.ds-scene-preview{height:220px;position:relative;display:flex;gap:20px;align-items:center;justify-content:center}.ds-object-label{background:#fdfcf9;color:#38342e;padding:3px 7px;font:14px system-ui;white-space:nowrap}.ds-object-selected{background:#fff0db;color:#714827}.ds-scene-hint{position:absolute;left:17px;bottom:14px;font-size:10px;color:#6f6961}.ds-scene-inspector{position:absolute;right:15px;bottom:14px;background:rgba(255,255,255,.93);padding:8px 12px;border-radius:7px;display:flex;flex-direction:column;font-size:10px;color:#635d53;overflow-wrap:anywhere}.ds-scene-inspector strong{font-weight:600;color:#454039}.ds-scene-inspector code{font-family:\"SFMono-Regular\",Consolas,monospace}.ds-scene-caption{padding:10px 16px;font-size:11px;color:#6f6961;background:#eeebe5}"
+    },
+    {
+      "name": "教程标签",
+      "kind": "nav",
+      "refersTo": "lesson-tabs",
+      "description": "教程、源码和状态在同一组内切换，活动项为纸面和轻阴影。",
+      "html": "<div class=\"ds-tabs\" role=\"tablist\" aria-label=\"教程视图\"><button class=\"ds-tab ds-tab-active\" role=\"tab\" aria-selected=\"true\">交互教程</button><button class=\"ds-tab\" role=\"tab\" aria-selected=\"false\">源码</button><button class=\"ds-tab\" role=\"tab\" aria-selected=\"false\">状态</button></div>",
+      "css": ".ds-tabs{display:inline-flex;align-items:center;gap:0;height:36px;padding:3px;background:#eeeae3;border-radius:12px;font-family:-apple-system,BlinkMacSystemFont,\"Segoe UI\",\"PingFang SC\",sans-serif;line-height:1.65;}.ds-tab{height:calc(100% - 1px);padding:4px 8px;border:1px solid transparent;border-radius:8px;font-family:inherit;font-size:14px;font-weight:500;color:rgba(44,41,36,.6);background:transparent;cursor:pointer;transition:background .15s,color .15s}.ds-tab-active{background:#fdfcf9;color:#2c2924;box-shadow:0 1px 3px 0 rgba(0,0,0,.1),0 1px 2px -1px rgba(0,0,0,.1)}.ds-tab:hover{color:#2c2924}.ds-tab:focus-visible{outline:2px solid #607c9e;outline-offset:3px;box-shadow:0 0 0 3px rgba(41,39,36,.5)}"
+    }
+  ],
+  "narrative": {
+    "northStar": "暖纸算法课堂",
+    "overview": "WindGen 用暖纸面、炭黑动作和低饱和数据色承载可持续修改的算法教程。熟悉的会话导航、右侧用户消息和底部输入建立连续对话；公式、数值与真实三维几何在同一条助手回复中展开。\n\n浅色表面、细边界和留白参考 OpenDesign；雾蓝、灰紫和琥珀属于本项目的教学表达。用户明确排除绿色，并要求保留 ChatGPT 式对话交互；WindGen 不冒称 OpenAI 产品。本文记录 frontend/src 已实现的系统，生产构建的样式确认了组件圆角与动画时长；它不是待实现的视觉提案。",
+    "keyCharacteristics": [
+      "暖纸底面与暖灰侧栏，炭黑承载主要动作。",
+      "低饱和色区分算法对象和选中状态。",
+      "宽幅内联课堂，公式和数值保持可核对。",
+      "中文系统字体、KaTeX 数学字体、等宽代码各司其职。"
+    ],
+    "rules": [
+      {
+        "name": "The Data Color Rule",
+        "body": "雾蓝、灰紫和琥珀服务于算法角色与选择反馈；不要把数据颜色扩散成整页装饰。",
+        "section": "colors"
+      },
+      {
+        "name": "The Numerical Clarity Rule",
+        "body": "保留 KaTeX 的数学排版和数值的 tabular-nums；三维对象标签保持屏幕空间可读，不随相机距离缩成几何细节。",
+        "section": "typography"
+      },
+      {
+        "name": "The Quiet Surface Rule",
+        "body": "以表面色差和细边界组织深度；阴影仅辅助输入框和控件，不成为内容分隔的主体。",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "Do 使用暖纸、暖灰和炭黑延续现有表面与动作关系。",
+      "Do 用雾蓝表示参数或轨迹、灰紫区分对象组、琥珀标识当前选中对象。",
+      "Do 保留公式、表格、源码的容器内横向滚动和数值对齐。",
+      "Do 保留会话历史行的高度，较长列表在导航内部滚动。",
+      "Do 让三维标签在相机缩放时保持屏幕空间尺寸，并用文字和值说明颜色。",
+      "Do 保留键盘可见焦点、加载/停止/恢复反馈与减少动态效果支持。"
+    ],
+    "donts": [
+      "Don't 引入绿色主色、绿色数据角色或绿色装饰。",
+      "Don't 用大块彩色背景或强阴影代替教学内容的层次。",
+      "Don't 用静态示意图冒充当前实现的可旋转、可点选三维几何。",
+      "Don't 让数学、表格或源码的宽度撑开手机页面。",
+      "Don't 把当前紧凑的 9–11px 辅助文案提升为通用正文或未来组件的默认字号。"
+    ]
+  }
+}
