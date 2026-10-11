@@ -1,0 +1,23 @@
+.env
+.env.*
+!.env.example
+.venv/
+__pycache__/
+.pytest_cache/
+.ruff_cache/
+data/
+node_modules/
+frontend/dist/
+frontend/test-results/
+frontend/playwright-report/
+*.log
+.DS_Store
+
+.impeccable/review/*.png
+
+# Local visual review output and compiler metadata
+.impeccable/review/
+*.tsbuildinfo
+coverage/
+htmlcov/
+.coverage
