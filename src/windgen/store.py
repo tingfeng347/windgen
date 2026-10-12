@@ -20,6 +20,9 @@ class Store:
                     created REAL NOT NULL, mode TEXT NOT NULL,
                     FOREIGN KEY(conversation_id) REFERENCES conversations(id));
             """)
+            columns = {row[1] for row in db.execute("PRAGMA table_info(revisions)")}
+            if "kind" not in columns:
+                db.execute("ALTER TABLE revisions ADD COLUMN kind TEXT NOT NULL DEFAULT 'lesson'")
 
     @contextmanager
     def connect(self):
@@ -79,7 +82,7 @@ class Store:
             ).fetchone()
         return self.decode(row) if row else None
 
-    def begin(self, cid, prompt, state, mode):
+    def begin(self, cid, prompt, state, mode, kind="lesson"):
         rid = str(uuid.uuid4())
         with self.connect() as db:
             db.execute(
@@ -87,8 +90,8 @@ class Store:
                 (prompt[:48], time.time(), cid),
             )
             db.execute(
-                "INSERT INTO revisions VALUES (?,?,?,?,?,?,?,?)",
-                (rid, cid, prompt, "", json.dumps(state), "streaming", time.time(), mode),
+                "INSERT INTO revisions (id,conversation_id,prompt,source,state,status,created,mode,kind) VALUES (?,?,?,?,?,?,?,?,?)",
+                (rid, cid, prompt, "", json.dumps(state), "streaming", time.time(), mode, kind),
             )
         return rid
 

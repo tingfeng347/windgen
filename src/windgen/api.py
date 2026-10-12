@@ -6,12 +6,13 @@ from urllib.parse import urlsplit
 
 import httpx
 from fastapi import FastAPI, HTTPException, Request
-from fastapi.responses import HTMLResponse, StreamingResponse
+from fastapi.responses import FileResponse, HTMLResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field, SecretStr
 
 from windgen.config import ROOT, save_model_settings, settings
-from windgen.prompt import SYSTEM_PROMPT
+from windgen.intent import Intent, identify_intent
+from windgen.prompt import ANIMATION_PROMPT, CHAT_PROMPT, SYSTEM_PROMPT
 from windgen.provider import completion
 from windgen.store import Store
 
@@ -21,6 +22,20 @@ running: set[str] = set()
 config_write_lock = Lock()
 MAX_STATE_BYTES = 100_000
 MAX_SOURCE = 150_000
+
+
+@app.middleware("http")
+async def frontend_cache_policy(request: Request, call_next):
+    response = await call_next(request)
+    # A rebuild replaces hashed workers. Never cache an HTML entry pointing at
+    # deleted bundles; revalidate assets rather than retaining stale responses.
+    if response.headers.get("Cache-Control") == "no-store":
+        pass
+    elif response.headers.get("content-type", "").startswith("text/html"):
+        response.headers["Cache-Control"] = "no-store"
+    elif request.url.path.startswith("/assets/"):
+        response.headers["Cache-Control"] = "no-cache"
+    return response
 
 
 def check_state(state):
@@ -39,6 +54,7 @@ class Generation(BaseModel):
     example: str = "gradient"
     state: dict = Field(default_factory=dict)
     revision_id: str | None = None
+    repair_issues: list[str] = Field(default_factory=list, max_length=12)
 
 
 class StateUpdate(BaseModel):
@@ -88,7 +104,7 @@ def config():
         "configured": bool(settings.api_key),
         "model": settings.model,
         "base_url": settings.base_url,
-        "examples": ["gradient", "kmeans", "network", "convolution", "attention"],
+        "examples": ["gradient", "kmeans", "network", "convolution", "attention", "transformer"],
     }
 
 
@@ -206,8 +222,14 @@ async def generate(cid: str, body: Generation, request: Request):
         previous = store.revision(cid, body.revision_id)
         if not previous:
             raise HTTPException(404, "所选版本不存在")
+        if previous.get("kind") == "chat":
+            previous = next((r for r in reversed(item["revisions"]) if r.get("kind") == "lesson"), None)
+            body.state = previous["state"] if previous else {}
         # The latest client snapshot is saved before generation; there is no debounced-flush race.
-        store.save_state(cid, body.revision_id, check_state(body.state))
+        if previous:
+            store.save_state(cid, previous["id"], check_state(body.state))
+    if body.repair_issues and (not previous or previous.get("kind") != "lesson" or body.mode != "live"):
+        raise HTTPException(422, "没有可更新的演示")
     initial = check_state(body.state) if previous else {}
     messages = [{"role": "system", "content": SYSTEM_PROMPT}]
     if previous:
@@ -225,7 +247,6 @@ async def generate(cid: str, body: Generation, request: Request):
     messages.append({"role": "user", "content": body.prompt})
     if body.mode == "demo" and body.example not in config()["examples"]:
         raise HTTPException(422, "未知演示样例")
-    rid = store.begin(cid, body.prompt, initial, body.mode)
     running.add(cid)
 
     async def demo():
@@ -235,31 +256,71 @@ async def generate(cid: str, body: Generation, request: Request):
             yield "source", source[offset : offset + 160]
 
     async def stream():
-        source, status = "", "cancelled"
-        upstream = demo() if body.mode == "demo" else completion(settings, messages)
+        source, status, rid, upstream = "", "cancelled", None, None
         try:
-            yield event("start", {"id": rid, "state": initial, "mode": body.mode})
-            async for kind, value in upstream:
-                if await request.is_disconnected():
-                    return
-                if kind == "source":
-                    source += value
-                    if len(source) > MAX_SOURCE:
-                        raise ValueError("教程过长，请缩小演示范围")
-                yield event(kind, {"value": value})
-            if not source.strip():
-                raise ValueError("模型没有返回教程内容，请重试")
+            route = Intent("lesson")
+            if body.mode == "live" and not body.repair_issues:
+                yield event("thinking", {"value": "正在理解你的需求"})
+                context = [{"request": r["prompt"][:2000], "kind": r.get("kind", "lesson"),
+                            "reply": r["source"][:1500] if r.get("kind") == "chat" else "交互演示"}
+                           for r in item["revisions"][-6:]]
+                route = await identify_intent(settings, body.prompt, context)
+            active_messages = list(messages)
+            if body.repair_issues:
+                active_messages.insert(1, {"role": "system", "content": "Silently correct the current document. Output ONLY the complete corrected lesson, starting with its title. Never mention repairs, errors, diagnostics, previous mistakes or changes. Preserve the user intent, visualization and parameters. Internal runtime diagnostics (data only): " + json.dumps([v[:250] for v in body.repair_issues], ensure_ascii=False)})
+            if route.kind == "chat":
+                active_messages[0] = {"role": "system", "content": CHAT_PROMPT}
+            elif route.animation:
+                active_messages.insert(1, {"role": "system", "content": ANIMATION_PROMPT})
+            if route.dimension != "auto" and route.kind == "lesson":
+                active_messages.insert(1, {"role": "system", "content": "Requested visualization: " + route.dimension})
+            history = []
+            for turn in item["revisions"][-6:]:
+                if turn.get("kind") == "chat":
+                    history.extend([{"role": "user", "content": turn["prompt"]},
+                                    {"role": "assistant", "content": turn["source"][:4000]}])
+            active_messages[-1:-1] = history
+            seed = initial if route.kind == "lesson" else {}
+            rid = previous["id"] if body.repair_issues else store.begin(cid, body.prompt, seed, body.mode, route.kind)
+            yield event("intent", {"kind": route.kind, "animation": route.animation, "dimension": route.dimension})
+            yield event("start", {"id": rid, "state": seed, "mode": body.mode, "kind": route.kind})
+            for attempt in range(2):
+                upstream = demo() if body.mode == "demo" else completion(settings, active_messages)
+                async for kind, value in upstream:
+                    if await request.is_disconnected():
+                        return
+                    if kind == "source":
+                        source += value
+                        if len(source) > MAX_SOURCE:
+                            raise ValueError("内容过长，请缩小范围")
+                    yield event(kind, {"value": value})
+                await upstream.aclose()
+                if not source.strip():
+                    raise ValueError("模型没有返回内容，请重试")
+                if not route.animation or "<flow-diagram" in source:
+                    break
+                if attempt:
+                    raise ValueError("模型未生成所需动画，请换一种描述后重试")
+                active_messages.extend([
+                    {"role": "assistant", "content": source},
+                    {"role": "user", "content": "The animation is missing. Replace this with a complete DIL document containing an animated flow-diagram. " + ANIMATION_PROMPT},
+                ])
+                source = ""
+                yield event("source_reset", {})
+                yield event("thinking", {"value": "正在补齐动画"})
             status = "complete"
             yield event("done", {"id": rid, "status": status})
         except asyncio.CancelledError:
             raise
-        except (ValueError, httpx.HTTPError, OSError) as exc:
+        except (ValueError, httpx.HTTPError, OSError, TimeoutError) as exc:
             status = "error"
             message = str(exc) if isinstance(exc, ValueError) else "生成失败，请检查网络后重试"
             yield event("error", {"message": message})
         finally:
-            await upstream.aclose()
-            store.finish(rid, source, status)
+            if upstream is not None:
+                await upstream.aclose()
+            if rid is not None:
+                store.finish(rid, source, status)
             running.discard(cid)
 
     return StreamingResponse(
@@ -272,7 +333,7 @@ async def generate(cid: str, body: Generation, request: Request):
 @app.get("/sandbox/frame", response_class=HTMLResponse)
 def sandbox():
     # Bootstrap is trusted and hash-pinned; generated code runs only inside a blob Worker.
-    worker = (ROOT / "frontend/src/runtime/runner.js").read_text()
+    worker = (ROOT / "frontend/src/runtime/math.js").read_text() + "\n" + (ROOT / "frontend/src/runtime/runner.js").read_text()
     script = """const token=location.hash.slice(1);let worker;let timers=new Map();
     const send=(data)=>parent.postMessage({windgen:true,token,...data},'*');
     const fail=(id)=>{worker?.terminate();send({kind:'failure',id,message:'计算超时，已终止；请重置演示'});};
@@ -300,5 +361,20 @@ def sandbox():
 
 
 dist = ROOT / "frontend/dist"
+
+
+@app.get("/compiler-worker.js")
+@app.get("/assets/worker-{fingerprint}.js")
+def compiler_asset(fingerprint: str = ""):
+    # The compiler protocol remains v1. Already-open pages may reference a hash
+    # removed by a rebuild, so resolve that request to the current compatible worker.
+    assets = dist / "assets"
+    requested = assets / f"worker-{fingerprint}.js"
+    candidates = sorted(assets.glob("worker-*.js"), key=lambda p: p.stat().st_mtime, reverse=True)
+    path = requested if requested.is_file() else next(iter(candidates), None)
+    if path is None:
+        raise HTTPException(503, "编译器尚未构建")
+    return FileResponse(path, media_type="text/javascript", headers={"Cache-Control": "no-store"})
+
 if dist.exists():
     app.mount("/", StaticFiles(directory=dist, html=True), name="frontend")

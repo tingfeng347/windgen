@@ -8,6 +8,31 @@ from windgen.config import settings
 from windgen.provider import completion
 
 
+@pytest.mark.parametrize(
+    "base_url,thinking",
+    [("https://api.deepseek.com", {"type": "disabled"}), ("https://api.example.test/v1", None)],
+)
+def test_interactive_generation_disables_deepseek_thinking_only(monkeypatch, base_url, thinking):
+    import json
+
+    original = httpx.AsyncClient
+    captured = []
+
+    def handler(request):
+        captured.append(json.loads(request.content))
+        return httpx.Response(200, content=b'data: {"choices":[{"delta":{"content":"hello"},"finish_reason":"stop"}]}\n\ndata: [DONE]\n\n')
+
+    monkeypatch.setattr(
+        httpx, "AsyncClient", lambda **kwargs: original(transport=httpx.MockTransport(handler), **kwargs)
+    )
+
+    async def run():
+        return [chunk async for chunk in completion(replace(settings, base_url=base_url, api_key="placeholder"), [])]
+
+    assert asyncio.run(run()) == [("source", "hello")]
+    assert captured[0].get("thinking") == thinking
+
+
 def test_stream_protocol_and_upstream_close_on_cancel(monkeypatch):
     original = httpx.AsyncClient
     closed = []

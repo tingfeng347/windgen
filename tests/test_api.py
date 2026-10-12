@@ -107,3 +107,31 @@ def test_state_limits_and_sandbox_policy(client):
     csp = response.headers["content-security-policy"]
     assert "connect-src 'none'" in csp and "worker-src blob:" in csp
     assert "sha256-" in csp
+
+
+def test_entry_html_is_not_cached_and_missing_bundles_are_revalidated(client):
+    response = client.get("/")
+    if response.status_code == 200:
+        assert response.headers["cache-control"] == "no-store"
+    sandbox = client.get("/sandbox/frame")
+    assert sandbox.headers["cache-control"] == "no-store"
+    missing = client.get("/assets/nonexistent-script.js")
+    assert missing.status_code == 404
+    assert missing.headers["cache-control"] == "no-cache"
+
+
+def test_old_compiler_url_survives_frontend_rebuild(tmp_path, monkeypatch):
+    from fastapi.testclient import TestClient
+
+    from windgen import api as module
+    from windgen.api import app
+    assets = tmp_path / "assets"
+    assets.mkdir()
+    (assets / "worker-current.js").write_text("self.postMessage({kind: 'ready'})")
+    monkeypatch.setattr(module, "dist", tmp_path)
+    client = TestClient(app)
+    response = client.get('/assets/worker-obsolete-build.js')
+    assert response.status_code == 200
+    assert 'javascript' in response.headers['content-type']
+    assert response.headers['cache-control'] == 'no-store'
+    assert 'postMessage' in response.text
