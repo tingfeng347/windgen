@@ -3,9 +3,12 @@
 const slots = new Map();
 let program, constants, appData, root, index = 0, handlers = new Map(), version = 0;
 let activeKeys = new Set(), state = {}, currentId = 0;
+let warnings = [];
 const fragment = Symbol('fragment');
 function jsx(type, props, ...children) { return {type,props:props||{},children}; }
 const DIL = {
+  math: teachingMath,
+  reportError(error) {const message=String(error?.message||error).slice(0,180);if(warnings.length<12&&!warnings.includes(message))warnings.push(message);},
   jsx, Fragment: fragment, render(el) {root=el;},
   useConstants() {return constants;}, useAppData(fn) {return fn?fn(appData):appData;},
   useState(initial, opts) {
@@ -33,12 +36,15 @@ function serialize(node,depth=0) {
   return {t:node.type===fragment?'#frag':String(node.type),p,c:(node.children||[]).map(n=>serialize(n,depth+1)).filter(Boolean)};
 }
 function render(id) {
-  index=0;root=null;handlers=new Map();activeKeys=new Set();nodeCount=0;
+  index=0;root=null;handlers=new Map();activeKeys=new Set();nodeCount=0;warnings=[];
   new Function('DIL','__dil','"use strict";\n'+program)(DIL,{jsx,Fragment:fragment});
   const tree=serialize(root),snapshot={};
   for(const key of activeKeys)if(!key.startsWith('@'))snapshot[key]=slots.get(key);
-  const message={kind:'snapshot',id,tree,state:snapshot,version:++version};
-  const text=JSON.stringify(message);
+  const message={kind:'snapshot',id,tree,state:snapshot,version:++version,warnings};
+  const text=JSON.stringify(message,(_,value)=>{
+    if(typeof value==='number'&&Number.isNaN(value)){DIL.reportError('计算出现 NaN，请检查矩阵维度与输入数值');return null;}
+    if(value===Infinity)return '∞';if(value===-Infinity)return '−∞';return value;
+  });
   if(text.length>600000)throw Error('演示数据过大，请减少点或对象');
   // JSON removes prototypes and non-data values from the tree crossing the boundary.
   self.postMessage(JSON.parse(text));

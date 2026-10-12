@@ -1,5 +1,5 @@
 import type {Compiled,Snapshot,State,Node} from '../types'
-const allowed = new Set(['#text','#frag','box','row','column','grid','grid-item','card','divider','spacer','text','title','caption','bold','label','code','badge','button','input','textarea','checkbox','select','slider','table','metric','formula','chart','scene','stepper','group','mesh','point','line'])
+const allowed = new Set(['#text','#frag','box','row','column','grid','grid-item','card','divider','spacer','text','title','caption','bold','label','code','badge','button','input','textarea','checkbox','select','slider','table','table-row','table-cell','list','list-item','metric','formula','math','chart','matrix','heatmap','token-graph','flow-diagram','segmented-control','disclosure','progress','scene','stepper','group','mesh','point','line'])
 export function validateTree(tree:unknown):Node|null {
   let count=0
   function walk(raw:unknown,depth:number):Node|null {
@@ -40,7 +40,7 @@ export class Sandbox {
     if(pending){clearTimeout(pending.timer);this.pending.delete(m.id)}
     if(m.kind==='failure'){const e=Error(m.message);pending?.reject(e);this.error(m.message);return}
     if(m.kind==='snapshot'){
-      try { const tree=validateTree(m.tree);this.version=m.version;this.latestState=m.state;this.snapshot({tree,state:m.state,version:m.version});pending?.resolve() }
+      try { const tree=validateTree(m.tree);this.version=m.version;this.latestState=m.state;const warnings=Array.isArray(m.warnings)?m.warnings.filter((v:unknown)=>typeof v==='string').slice(0,12).map((v:string)=>v.slice(0,180)):[];this.snapshot({tree,state:m.state,version:m.version,warnings});pending?.resolve() }
       catch(e){this.error((e as Error).message);pending?.reject(e as Error)}
     } else pending?.resolve()
   }

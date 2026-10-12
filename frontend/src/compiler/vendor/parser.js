@@ -77,6 +77,39 @@ function parseNodes(ctx, closeTag) {
     const c = src[ctx.i];
     const next = src[ctx.i + 1];
 
+    // Comments are host metadata, never prose, including unfinished stream prefixes.
+    if (src.startsWith('<!--', ctx.i)) {
+      flushText(ctx.i);
+      const end = src.indexOf('-->', ctx.i + 4);
+      ctx.i = end < 0 ? src.length : end + 3;
+      continue;
+    }
+
+    if (!closeTag && c === '<' && next === '/') {
+      const orphan = /^<\/([A-Za-z][\w.-]*)\s*>/.exec(src.slice(ctx.i));
+      if (orphan) {
+        flushText(ctx.i);
+        ctx.diag.add('orphan_closing_tag', ctx.i, { tag: orphan[1], action: 'dropped' });
+        ctx.i += orphan[0].length;
+        continue;
+      }
+    }
+    // Markdown math is text, never a DIL/JavaScript expression. In particular,
+    // subscripts such as d_{\text{model}} must not be interpreted as code.
+    if (c === '$' && src[ctx.i - 1] !== '\\') {
+      const delimiter = next === '$' ? '$$' : '$';
+      let end = src.indexOf(delimiter, ctx.i + delimiter.length);
+      while (end >= 0 && src[end - 1] === '\\') end = src.indexOf(delimiter, end + delimiter.length);
+      if (end >= 0) {
+        flushText(ctx.i);
+        nodes.push({ type: 'element', name: delimiter === '$$' ? 'formula' : 'math',
+          attrs: [{ name: 'content', kind: 'string', value: src.slice(ctx.i + delimiter.length, end) }],
+          children: [], pos: ctx.i, end: end + delimiter.length, closed: true });
+        ctx.i = end + delimiter.length;
+        continue;
+      }
+    }
+
     if (closeTag && c === '<' && next === '/') {
       const closing = readClosingTag(ctx, closeTag);
       if (closing) {

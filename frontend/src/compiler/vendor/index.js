@@ -33,7 +33,7 @@ import { isStatement, isProgram } from './validate.js';
 import { INTRINSIC, resolutionId } from './components.js';
 
 const PROTOCOL_VERSION = 1;
-const SAFE_PRELUDE = 'function __dilSafe(evaluate,failureValue){try{return evaluate()}catch{return failureValue}}';
+const SAFE_PRELUDE = 'function __dilSafe(evaluate,failureValue){try{return evaluate()}catch(error){DIL.reportError?.(error);return failureValue}}';
 
 /** `clean`, or `code×n` pairs — the one-line form the UI shows. */
 function summarize(diagnostics) {
