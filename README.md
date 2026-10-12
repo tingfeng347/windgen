@@ -1,6 +1,11 @@
 # WindGen
 
-用对话生成可操作的机器学习教程：公式、中间数值、本地计算、三维场景与持续追问。Python 3.12 + uv + python-dotenv；React + TypeScript + shadcn/ui + Three.js。
+[![Python 3.12](https://img.shields.io/badge/Python-3.12-3776AB?logo=python&logoColor=white)](https://www.python.org/downloads/release/python-3120/)
+[![React + TypeScript](https://img.shields.io/badge/React-TypeScript-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+
+用对话生成可操作的机器学习教程：公式、中间数值、本地计算与按需三维场景。Python 3.12 + uv + python-dotenv；React + TypeScript + shadcn/ui + Three.js。
+
+![WindGen Transformer interactive lesson](docs/assets/windgen-transformer.png)
 
 ## 启动
 
@@ -13,13 +18,13 @@ cd ..
 uv run windgen
 ```
 
-打开 http://127.0.0.1:8787 。首页五个固定教学样例无需 API 密钥，包括梯度下降、K-means、小型网络反向传播、卷积张量与注意力空间节点。
+打开 http://127.0.0.1:8787 。首页六个固定教学样例无需 API 密钥，包括 Transformer、梯度下降、K-means、小型网络反向传播、卷积张量与注意力空间节点。
 
 从源码目录运行；SQLite 数据保存在 `data/`。Python 服务默认只监听本机。浏览器需要支持 WebGL 和 Worker，建议使用较新的 Chrome、Edge 或 Firefox。无 WebGL 时仍可查看公式、源码和数值。
 
 ## 配置真实模型
 
-点击页面右上角「模型配置」，在居中弹窗中选择 DeepSeek 或自定义 OpenAI 兼容接口，填写基础地址、模型 ID 与 API Key。「测试连接」查询模型列表；「保存配置」写入本机 `.env` 并立即应用，后续生成无需重启。已有密钥不会回填到页面，同一接口留空可保留；切换接口需填写对应服务的密钥。
+点击页面右上角「通用配置」→「模型服务」，在居中弹窗中选择 DeepSeek 或自定义 OpenAI 兼容接口，填写基础地址、模型 ID 与 API Key。「测试连接」查询模型列表；「保存配置」写入本机 `.env` 并立即应用，后续生成无需重启。已有密钥不会回填到页面，同一接口留空可保留；切换接口需填写对应服务的密钥。
 
 也可以手动配置：
 
@@ -38,9 +43,10 @@ LLM_API_KEY=你的密钥
 ## 使用
 
 - 首页选择固定样例，可以单步、播放/暂停、重置、修改参数。
+- 「Transformer」使用 6 个 token、4 维表示、2 个头的合成教学数据；切换七个计算阶段，选择头与 Query、调整温度和因果掩码，点选真实矩阵、注意力热力图与二维 token 连接。继续追问与自动纠错需配置真实模型，详见 [交互教学组件与 Transformer 样例](docs/intelligent-ui.md)。
 - 三维场景拖动旋转、滚轮缩放、点击对象检查标识和数值；“复位视角”恢复观察角度。
-- 输入算法需求会调用真实模型。后续提问包含当前版本、源码和最新客户端状态。
-- 新回答更新当前演示，版本栏可查看旧版本。普通修改保留参数；显式修改参数可通过生成文档的状态指令重置进度。
+- 输入算法需求会调用真实模型。系统会区分闲聊与教程请求；闲聊直接对话，教程内容边生成边渲染。出现计算错误时自动尝试修正。后续提问包含当前演示和最新参数状态。
+- 新回答更新当前演示，对话栏可查看历史回答。普通修改保留参数；显式修改参数可通过生成文档的状态指令重置进度。
 - “源码”展示 DIL 文档与解析诊断；“状态”显示进入下一轮的状态快照。
 - 侧栏会话旁的垃圾桶可删除单条会话，底部「删除全部会话」可清空历史。两者均需确认，并一起删除对应版本；生成中不可删除。删除当前会话后回到新教程。
 - 固定样例明确标识，继续提问需要真实模型配置，不会用固定样例冒充真实生成。
@@ -70,7 +76,7 @@ npx playwright install chromium
 npm run test:browser
 ```
 
-浏览器测试需要上述两个服务已启动。覆盖实际三维控件、下一轮快照、旧版本恢复、手机布局、浏览器隔离、禁止联网与超时。
+浏览器测试需要上述两个服务已启动。覆盖实际三维控件、连续动画、闲聊路由、早期流式渲染、自动纠错、手机布局、浏览器隔离、禁止联网与超时。
 
 ## 结构
 
