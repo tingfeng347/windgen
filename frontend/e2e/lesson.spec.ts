@@ -29,7 +29,7 @@ test('gradient lesson, latest snapshot, version restore and responsive layout',a
   await page.getByRole('tab',{name:'状态',exact:true}).click()
   await expect(page.locator('.source-view')).toContainText('"learningRate": 0.2')
   await page.getByRole('tab',{name:'交互教程'}).click()
-  await page.getByRole('button',{name:'版本 1',exact:true}).click()
+  await page.getByRole('button',{name:'演示 1',exact:true}).click()
   await expect(page.getByTestId('step-value')).toHaveText(step)
   await page.locator('.scene-wrap').scrollIntoViewIfNeeded()
   await page.screenshot({path:'test-results/desktop.png',fullPage:true})
