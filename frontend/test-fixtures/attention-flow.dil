@@ -1,0 +1,36 @@
+<!-- windgen-state: {"set":{"temperature":1},"reset":["step"]} -->
+{@body const [temperature,setTemperature] = DIL.useState(1)}
+{@body const [selected,setSelected] = DIL.useState(0)}
+{@body const tokens = ['我','爱','机器','学习']}
+{@body const X = [[0.9,0.2,0.1,0.4],[0.1,0.8,0.3,0.2],[0.7,0.6,0.9,0.1],[0.2,0.3,0.5,0.8]]}
+{@body const Wq = [[0.5,0.1,0.2,0.0],[0.0,0.6,0.1,0.3],[0.2,0.0,0.7,0.1],[0.1,0.3,0.2,0.5]]}
+{@body const Wk = [[0.4,0.2,0.0,0.1],[0.1,0.5,0.2,0.0],[0.3,0.1,0.6,0.2],[0.0,0.2,0.1,0.7]]}
+{@body const Wv = [[0.6,0.0,0.1,0.2],[0.2,0.5,0.0,0.1],[0.1,0.2,0.6,0.0],[0.0,0.1,0.3,0.5]]}
+{@body const Q = DIL.math.matmul(X,Wq)}
+{@body const K = DIL.math.matmul(X,Wk)}
+{@body const V = DIL.math.matmul(X,Wv)}
+{@body const dk = K[0].length}
+{@body const scores = Q.map(q=>K.map(k=>q.reduce((s,v,i)=>s+v*k[i],0)/Math.sqrt(dk)))}
+{@body const weights = scores.map(row=>DIL.math.softmax(row,temperature))}
+{@body const w = weights[selected]}
+{@body const output = V[0].map((_,j)=>V.reduce((s,_,i)=>s+w[i]*V[i][j],0))}
+{@body const nodeY = [90,150,210,270]}
+{@body const nodes = tokens.map((t,i)=>({id:'q'+i,label:t+' (Key)',x:430,y:nodeY[i],value:w[i].toFixed(3)})).concat([{id:'out',label:'输出',x:560,y:180,value:output.map(v=>v.toFixed(2)).join(',')}]).concat([{id:'sel',label:'Query: '+tokens[selected],x:70,y:180,value:'1.000'}])}
+{@body const edges = tokens.map((t,i)=>({from:'sel',to:'q'+i,weight:w[i],label:w[i].toFixed(3)})).concat(tokens.map((t,i)=>({from:'q'+i,to:'out',weight:w[i],label:''})))}
+<box>
+<title>注意力信息流：4 个 token</title>
+<text>粒子从选中的 Query 出发，按真实 softmax 权重流向各 Key，再汇聚到输出。粒子密度与边宽正比于权重 <formula content={String.raw`\alpha_i=\mathrm{softmax}(q\cdot k_i/\sqrt{d_k})`}/>。</text>
+<row gap={3}>
+<column gap={2}>
+<select label="Query token" value={selected} options={tokens.map((t,i)=>({label:t,value:i}))} onChange={v=>setSelected(v)}/>
+<slider label="温度 T" min={0.2} max={3} step={0.1} value={temperature} onChange={v=>setTemperature(v)}/>
+<metric label="权重和" value={w.reduce((a,b)=>a+b,0).toFixed(6)}/>
+<metric label="输出向量" value={'['+output.map(v=>v.toFixed(3)).join(', ')+']'}/>
+</column>
+<column gap={2}>
+<flow-diagram animated={true} nodes={nodes} edges={edges} selected={'sel'} onSelect={id=>{const m=id.match(/^q(\d)$/); if(m) setSelected(Number(m[1]))}} caption="粒子表示选中 Query 的信息按权重流向各 Key 并汇聚到输出"/>
+</column>
+</row>
+<caption>权重表（行=Query，列=Key），当前行高亮：</caption>
+<table columns={['Query','我','爱','机器','学习']} rows={tokens.map((t,i)=>[t].concat(weights[i].map(v=>v.toFixed(3))))}/>
+</box>

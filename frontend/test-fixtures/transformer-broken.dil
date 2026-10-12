@@ -1,0 +1,172 @@
+<!-- windgen-state: {"set":{"temperature":1,"headIndex":0,"tokenIndex":0,"causal":false}} -->
+# 微型 Transformer 逐步演示：处理「我 喜欢 学习 自然 语言 处理」
+
+本教程用一个固定、公开的**微型网络**追踪一句话的完整前向传播。规模刻意做小以便手算核对：
+
+- 序列长度 $n=6$，词向量维度 $d_{\text{model}}=4$，注意力头数 $h=2$，每头维度 $d_k=2$。
+- 所有权重是**确定性教学数值**（由固定种子生成），不是预训练权重。
+- 每一步都给出：公式、矩阵形状、实际数值、以及对应的简短实现代码。
+
+整体流程（点击下方阶段逐步推进）：
+
+**词向量 + 位置编码 → Q/K/V 投影 → 缩放点积 → softmax 权重 → 多头拼接 + 输出投影 → 残差 + LayerNorm → 两层前馈网络**
+
+你可以：切换注意力头、选择某个 token、调整 softmax 温度、切换双向 / 因果掩码。所有图表与数值在浏览器内实时重算，**被掩码位置权重恒为 0，未掩码行权重和为 1**。
+
+{@body const tokens = ['我','喜欢','学习','自然','语言','处理']}
+{@body const n = 6}
+{@body const dModel = 4}
+{@body const dK = 2}
+{@body const numHeads = 2}
+{@body const [step,setStep] = DIL.useState(0)}
+{@body const [headIndex,setHeadIndex] = DIL.useState(0)}
+{@body const [tokenIndex,setTokenIndex] = DIL.useState(0)}
+{@body const [temperature,setTemperature] = DIL.useState(1)}
+{@body const [causal,setCausal] = DIL.useState(false)}
+{@body const seed = 12345}
+{@body const rng = (s)=>{const x=Math.sin(s*12.9898+seed*0.001)*43758.5453;return x-Math.floor(x)}}
+{@body const w = (i,j,scale)=>((rng(i*97+j*13+7)*2-1)*scale)}
+{@body const E = Array.from({length:n},(_,i)=>Array.from({length:dModel},(_,j)=>Number((w(i,j,1.0)).toFixed(3))))}
+{@body const posEnc = Array.from({length:n},(_,p)=>Array.from({length:dModel},(_,j)=>{const k=Math.floor(j/2);const val=(j%2===0)?Math.sin(p/Math.pow(10000,2*k/dModel)):Math.cos(p/Math.pow(10000,2*k/dModel));return Number(val.toFixed(3))}))}
+{@body const X = E.map((row,i)=>row.map((v,j)=>Number((v+posEnc[i][j]).toFixed(3))))}
+{@body const Wq = Array.from({length:dModel},(_,i)=>Array.from({length:dModel},(_,j)=>Number(w(i+50,j+3,0.6).toFixed(3))))}
+{@body const Wk = Array.from({length:dModel},(_,i)=>Array.from({length:dModel},(_,j)=>Number(w(i+80,j+9,0.6).toFixed(3))))}
+{@body const Wv = Array.from({length:dModel},(_,i)=>Array.from({length:dModel},(_,j)=>Number(w(i+110,j+15,0.6).toFixed(3))))}
+{@body const Wo = Array.from({length:dModel},(_,i)=>Array.from({length:dModel},(_,j)=>Number(w(i+140,j+21,0.6).toFixed(3))))}
+{@body const matmul = (A,B)=>A.map(r=>B[0].map((_,j)=>Number(r.reduce((s,v,k)=>s+v*B[k][j],0).toFixed(3))))}
+{@body const Q = matmul(X,Wq)}
+{@body const K = matmul(X,Wk)}
+{@body const V = matmul(X,Wv)}
+{@body const sliceHead = (M,hid)=>M.map(row=>row.slice(hid*dK,hid*dK+dK))}
+{@body const Qh = sliceHead(Q,headIndex)}
+{@body const Kh = sliceHead(K,headIndex)}
+{@body const Vh = sliceHead(V,headIndex)}
+{@body const scores = Qh.map(qi=>Kh.map(kj=>Number((qi.reduce((s,v,k)=>s+v*kj[k],0)/Math.sqrt(dK)).toFixed(3))))}
+{@body const mask = (i,j)=>causal&&j>i}
+{@body const maskedScores = scores.map((row,i)=>row.map((v,j)=>mask(i,j)?-Infinity:v))}
+{@body const softmaxRow = (row)=>{const m=Math.max(...row);const ex=row.map(v=>v===-Infinity?0:Math.exp((v-m)/temperature));const s=ex.reduce((a,b)=>a+b,0);return ex.map(v=>Number((v/s).toFixed(4)))}}
+{@body const attn = maskedScores.map(softmaxRow)}
+{@body const rowSums = attn.map(r=>Number(r.reduce((a,b)=>a+b,0).toFixed(4)))}
+{@body const headOut = attn.map((row,i)=>Array.from({length:dK},(_,d)=>Number(row.reduce((s,a,j)=>s+a*Vh[j][d],0).toFixed(3))))}
+{@body const concat = Array.from({length:n},(_,i)=>[...sliceHead(Q,0).map((_,d)=>Number(attn[i].reduce((s,a,j)=>s+a*sliceHead(V,0)[j][d],0).toFixed(3))),...sliceHead(Q,1).map((_,d)=>Number(attn[i].reduce((s,a,j)=>s+a*sliceHead(V,1)[j][d],0).toFixed(3)))])}
+{@body const projOut = matmul(concat,Wo)}
+{@body const residual = X.map((row,i)=>row.map((v,j)=>Number((v+projOut[i][j]).toFixed(3))))}
+{@body const mean = residual.map(r=>Number((r.reduce((a,b)=>a+b,0)/dModel).toFixed(4)))}
+{@body const variance = residual.map((r,i)=>Number((r.reduce((s,v)=>s+(v-mean[i])**2,0)/dModel).toFixed(4)))}
+{@body const ln = residual.map((r,i)=>r.map(v=>Number(((v-mean[i])/Math.sqrt(variance[i]+1e-5)).toFixed(3))))}
+{@body const gamma = [1,1,1,1]}
+{@body const beta = [0,0,0,0]}
+{@body const lnOut = ln.map(r=>r.map((v,j)=>Number((gamma[j]*v+beta[j]).toFixed(3))))}
+{@body const W1 = Array.from({length:dModel},(_,i)=>Array.from({length:8},(_,j)=>Number(w(i+200,j+5,0.5).toFixed(3))))}
+{@body const W2 = Array.from({length:8},(_,i)=>Array.from({length:dModel},(_,j)=>Number(w(i+260,j+11,0.5).toFixed(3))))}
+{@body const hidden = matmul(lnOut,W1).map(r=>r.map(v=>Number(Math.max(0,v).toFixed(3))))}
+{@body const ffnOut = matmul(hidden,W2)}
+{@body const finalOut = ffnOut.map((r,i)=>r.map((v,j)=>Number((v+lnOut[i][j]).toFixed(3))))}
+{@body const heatData = attn.reduce((acc,row,i)=>[...acc,...row.map((v,j)=>({x:j,y:i,weight:v}))],[])}
+{@body const stepTitles = ['词向量 + 位置编码','Q/K/V 投影','缩放点积','softmax 注意力权重','多头拼接 + 输出投影','残差 + LayerNorm','两层前馈网络']}
+
+<box>
+<title>微型 Transformer 前向传播</title>
+<text>当前阶段：{stepTitles[step]}（第 {step+1} / 7 步）</text>
+<stepper value={step} onChange={setStep} max={6} label="阶段"/>
+<row>
+<select label="注意力头" value={headIndex} onChange={v=>setHeadIndex(v)} options={[{label:'头 0',value:0},{label:'头 1',value:1}]}/>
+<select label="所选 token" value={tokenIndex} onChange={v=>setTokenIndex(v)} options={tokens.map((t,i)=>({label:t,value:i}))}/>
+<select label="注意力类型" value={causal?1:0} onChange={v=>setCausal(v===1)} options={[{label:'双向',value:0},{label:'因果掩码',value:1}]}/>
+</row>
+<slider label="softmax 温度 T" min={0.2} max={3} step={0.1} value={temperature} onChange={v=>setTemperature(v)}/>
+<caption>温度 T 缩放 logits：T&lt;1 更尖锐，T&gt;1 更平滑。掩码位置权重恒为 0。</caption>
+</box>
+
+<box>
+<title>阶段 1：词向量与位置编码</title>
+<formula content={String.raw`X = E + P,\quad E\in\mathbb{R}^{6\times 4},\ P_{p,2k}=\sin\!\frac{p}{10000^{2k/4}},\ P_{p,2k+1}=\cos\!\frac{p}{10000^{2k/4}}`}/>
+<text>词向量 E（每行一个 token，4 维）：</text>
+<table columns={['token','d0','d1','d2','d3']} rows={E.map((r,i)=>[tokens[i],...r])}/>
+<text>位置编码 P（按位置 p 生成正弦/余弦）：</text>
+<table columns={['pos','d0','d1','d2','d3']} rows={posEnc.map((r,i)=>[i,...r])}/>
+<text>相加得到输入 X：</text>
+<table columns={['token','d0','d1','d2','d3']} rows={X.map((r,i)=>[tokens[i],...r])}/>
+<code content={'const P = pos.map((p)=>d.map((_,j)=> j%2===0 ? Math.sin(p/10000**(2*Math.floor(j/2)/d)) : Math.cos(p/10000**(2*Math.floor(j/2)/d))));'}/>
+</box>
+
+<box>
+<title>阶段 2：Q / K / V 投影</title>
+<formula content={String.raw`Q=XW_Q,\quad K=XW_K,\quad V=XW_V,\quad W_\bullet\in\mathbb{R}^{4\times 4}`}/>
+<text>Q = X·Wq：</text>
+<table columns={['token','q0','q1','q2','q3']} rows={Q.map((r,i)=>[tokens[i],...r])}/>
+<text>K = X·Wk：</text>
+<table columns={['token','k0','k1','k2','k3']} rows={K.map((r,i)=>[tokens[i],...r])}/>
+<text>V = X·Wv：</text>
+<table columns={['token','v0','v1','v2','v3']} rows={V.map((r,i)=>[tokens[i],...r])}/>
+<text>当前头 {headIndex} 取 2 维切片（d_k = 2）：</text>
+<table columns={['token','q0','q1']} rows={Qh.map((r,i)=>[tokens[i],...r])}/>
+<code content={'const Q = matmul(X, Wq); const K = matmul(X, Wk); const V = matmul(X, Wv); const Qh = Q.map(r=>r.slice(h*dk, h*dk+dk));'}/>
+</box>
+
+<box>
+<title>阶段 3：缩放点积</title>
+<formula content={String.raw`S = \frac{Q_h K_h^\top}{\sqrt{d_k}},\quad S\in\mathbb{R}^{6\times 6},\ \sqrt{d_k}=\sqrt{2}`}/>
+<text>注意力分数 S（行 = query token，列 = key token）：</text>
+<table columns={['q\\k',...tokens]} rows={scores.map((r,i)=>[tokens[i],...r])}/>
+<text>因果掩码后（上三角设为 -∞，即权重将为 0）：</text>
+<table columns={['q\\k',...tokens]} rows={maskedScores.map((r,i)=>[tokens[i],...r.map(v=>v===-Infinity?'-inf':v)])}/>
+<code content={'const S = Qh.map(qi => Kh.map(kj => qi.reduce((s,v,k)=>s+v*kj[k],0)/Math.sqrt(dk)));'}/>
+</box>
+
+<box>
+<title>阶段 4：softmax 注意力权重</title>
+<formula content={String.raw`A_{ij}=\frac{\exp(S_{ij}/T)}{\sum_{j'}\exp(S_{ij'}/T)},\quad \text{掩码处}=0`}/>
+<text>注意力权重矩阵 A（每行未掩码权重和为 1）：</text>
+<table columns={['q\\k',...tokens,'行和']} rows={attn.map((r,i)=>[tokens[i],...r,rowSums[i]])}/>
+<text>热力图（颜色越深权重越大；所选 token 行高亮）：</text>
+<chart data={heatData} xKey="x" yKey="weight" label="注意力权重"/>
+<text>所选 token「{tokens[tokenIndex]}」作为 query 的权重分布：</text>
+<table columns={['key token','权重']} rows={attn[tokenIndex].map((v,j)=>[tokens[j],v])}/>
+<code content={'const A = S.map(row => { const m=Math.max(...row); const e=row.map(v=>v===-Infinity?0:Math.exp((v-m)/T)); const s=e.reduce((a,b)=>a+b,0); return e.map(v=>v/s); });'}/>
+</box>
+
+<box>
+<title>阶段 5：多头拼接与输出投影</title>
+<formula content={String.raw`\text{head}_h=A_hV_h,\quad \text{Concat}=[\text{head}_0;\text{head}_1]\in\mathbb{R}^{6\times 4},\quad O=\text{Concat}\,W_O`}/>
+<text>当前头 {headIndex} 的输出 head_h = A·V_h：</text>
+<table columns={['token','h0','h1']} rows={headOut.map((r,i)=>[tokens[i],...r])}/>
+<text>两头拼接 Concat（4 维）：</text>
+<table columns={['token','c0','c1','c2','c3']} rows={concat.map((r,i)=>[tokens[i],...r])}/>
+<text>输出投影 O = Concat·Wo：</text>
+<table columns={['token','o0','o1','o2','o3']} rows={projOut.map((r,i)=>[tokens[i],...r])}/>
+<code content={'const head = A.map(row => Vh[0].map((_,d)=> row.reduce((s,a,j)=>s+a*Vh[j][d],0))); const O = matmul(concat, Wo);'}/>
+</box>
+
+<box>
+<title>阶段 6：残差连接与 LayerNorm</title>
+<formula content={String.raw`R=X+O,\quad \mu_i=\tfrac1d\sum_j R_{ij},\quad \sigma_i^2=\tfrac1d\sum_j(R_{ij}-\mu_i)^2,\quad \text{LN}_{ij}=\gamma_j\frac{R_{ij}-\mu_i}{\sqrt{\sigma_i^2+\epsilon}}+\beta_j`}/>
+<text>残差 R = X + O：</text>
+<table columns={['token','r0','r1','r2','r3']} rows={residual.map((r,i)=>[tokens[i],...r])}/>
+<text>每行均值 μ 与方差 σ²（ε = 1e-5）：</text>
+<table columns={['token','mean','var']} rows={residual.map((_,i)=>[tokens[i],mean[i],variance[i]])}/>
+<text>LayerNorm 输出（γ=1, β=0）：</text>
+<table columns={['token','l0','l1','l2','l3']} rows={lnOut.map((r,i)=>[tokens[i],...r])}/>
+<code content={'const R = X.map((row,i)=> row.map((v,j)=> v + O[i][j])); const mu = R.map(r=> r.reduce((a,b)=>a+b,0)/d); const sd = R.map((r,i)=> Math.sqrt(r.reduce((s,v)=>s+(v-mu[i])**2,0)/d + 1e-5));'}/>
+</box>
+
+<box>
+<title>阶段 7：两层前馈网络</title>
+<formula content={String.raw`H=\text{ReLU}(\text{LN}\,W_1),\quad F=H W_2,\quad \text{Out}=\text{LN}+F`}/>
+<text>隐藏层 H = ReLU(LN·W1)，8 维：</text>
+<table columns={['token','h0','h1','h2','h3','h4','h5','h6','h7']} rows={hidden.map((r,i)=>[tokens[i],...r])}/>
+<text>FFN 输出 F = H·W2：</text>
+<table columns={['token','f0','f1','f2','f3']} rows={ffnOut.map((r,i)=>[tokens[i],...r])}/>
+<text>最终输出 Out = LN + F（残差）：</text>
+<table columns={['token','out0','out1','out2','out3']} rows={finalOut.map((r,i)=>[tokens[i],...r])}/>
+<code content={'const H = matmul(lnOut, W1).map(r=> r.map(v=> Math.max(0,v))); const F = matmul(H, W2); const out = F.map((r,i)=> r.map((v,j)=> v + lnOut[i][j]));'}/>
+</box>
+
+<box>
+<title>与真实语言模型的区别</title>
+<text>1. 规模：真实模型 d_model 常为 768~12288，头数 12~96，层数数十层；这里仅 4 维、2 头、单层。</text>
+<text>2. 权重：真实模型在数十亿 token 上训练得到；这里是固定种子的教学数值，无语言能力。</text>
+<text>3. 组件：真实模型含多层堆叠、dropout、学习率调度、词表与子词切分、输出投影到词表等，此处省略。</text>
+<text>4. 目的：本演示只用于核对公式、形状与数值流，帮助理解注意力机制的计算细节。</text>
+</box>
+</box>

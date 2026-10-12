@@ -1,0 +1,136 @@
+<!-- windgen-state: {"set":{"step":0}} -->
+{@body const [step,setStep] = DIL.useState(0)}
+{@body const [temperature,setTemperature] = DIL.useState(1)}
+{@body const [head,setHead] = DIL.useState(0)}
+{@body const [selectedToken,setSelectedToken] = DIL.useState(0)}
+{@body const [causal,setCausal] = DIL.useState(false)}
+{@body const [selectedCube,setSelectedCube] = DIL.useState('')}
+{@body const tokens = ['我','喜欢','学习','自然','语言','处理']}
+{@body const X = [[0.2,0.5,-0.3,0.1],[0.7,-0.2,0.4,0.3],[-0.1,0.6,0.2,-0.5],[0.4,0.1,-0.6,0.2],[0.3,-0.4,0.5,0.6],[-0.2,0.3,0.1,-0.4]]}
+{@body const PE = X.map((_,i)=>[Math.sin(i/1.0),Math.cos(i/1.0),Math.sin(i/2.0),Math.cos(i/2.0)])}
+{@body const Xp = X.map((row,i)=>row.map((v,j)=>v+PE[i][j]))}
+{@body const Wq = [[0.5,-0.3,0.2,0.1],[-0.2,0.4,0.3,-0.1],[0.1,0.2,-0.4,0.5],[0.3,-0.1,0.2,0.4]]}
+{@body const Wk = [[0.2,0.5,-0.1,0.3],[0.4,-0.2,0.3,0.1],[-0.3,0.1,0.5,-0.2],[0.1,0.3,-0.2,0.4]]}
+{@body const Wv = [[0.3,-0.1,0.4,0.2],[-0.4,0.2,0.1,0.3],[0.2,0.3,-0.2,0.5],[0.5,-0.3,0.1,0.2]]}
+{@body const Q = DIL.math.matmul(Xp,Wq)}
+{@body const K = DIL.math.matmul(Xp,Wk)}
+{@body const V = DIL.math.matmul(Xp,Wv)}
+{@body const Qh = DIL.math.splitHeads(Q,2)}
+{@body const Kh = DIL.math.splitHeads(K,2)}
+{@body const Vh = DIL.math.splitHeads(V,2)}
+{@body const dk = 2}
+{@body const mask = causal ? Array.from({length:6},(_,i)=>Array.from({length:6},(_,j)=>j>i)) : Array.from({length:6},()=>Array.from({length:6},()=>false))}
+{@body const scores = Qh.map((qh,h)=>DIL.math.matmul(qh,DIL.math.transpose(Kh[h])).map(r=>r.map(v=>v/Math.sqrt(dk))))}
+{@body const A = scores.map((s,h)=>s.map((row,i)=>DIL.math.softmax(row,temperature,mask[i])))}
+{@body const headOut = A.map((a,h)=>DIL.math.matmul(a,Vh[h]))}
+{@body const concat = DIL.math.concatHeads(headOut)}
+{@body const Wo = [[0.4,0.1,-0.2,0.3],[-0.1,0.5,0.2,-0.3],[0.3,-0.2,0.4,0.1],[0.2,0.3,-0.1,0.5]]}
+{@body const O = DIL.math.matmul(concat,Wo)}
+{@body const res1 = Xp.map((row,i)=>row.map((v,j)=>v+O[i][j]))}
+{@body const Z = DIL.math.layerNorm(res1)}
+{@body const W1 = [[0.5,-0.3,0.2,0.1],[-0.2,0.4,0.3,-0.1],[0.1,0.2,-0.4,0.5],[0.3,-0.1,0.2,0.4]]}
+{@body const b1 = [0.1,-0.1,0.2,0.0]}
+{@body const W2 = [[0.3,0.1,-0.2,0.4],[-0.1,0.5,0.2,-0.3],[0.2,-0.2,0.4,0.1],[0.4,0.3,-0.1,0.2]]}
+{@body const b2 = [0.0,0.1,-0.1,0.2]}
+{@body const H1raw = DIL.math.matmul(Z,W1).map((row,i)=>row.map((v,j)=>v+b1[j]))}
+{@body const H1 = H1raw.map(row=>row.map(v=>Math.max(0,v)))}
+{@body const H2raw = DIL.math.matmul(H1,W2).map((row,i)=>row.map((v,j)=>v+b2[j]))}
+{@body const final = Z.map((row,i)=>row.map((v,j)=>v+H2raw[i][j]))}
+{@body const stages = ['词向量与位置编码','Q/K/V 投影','缩放点积','Softmax 注意力','多头拼接与输出投影','残差与 LayerNorm','前馈网络']}
+{@body const round = (m,p=3)=>m.map(r=>r.map(v=>Number(v.toFixed(p))))}
+{@body const rowSum = A[head].map(r=>r.reduce((a,b)=>a+b,0))}
+{@body const rowMax = A[head].map(r=>Math.max(...r))}
+{@body const entropy = A[head].map(r=>-r.reduce((a,p)=>a+(p>0?p*Math.log(p):0),0))}
+{@body const focus = A[head].map(r=>r.indexOf(Math.max(...r)))}
+{@body const headDiffMax = A[0].reduce((a,r,i)=>Math.max(a,...r.map((v,j)=>Math.abs(v-A[1][i][j]))),0)}
+{@body const selectedRow = A[head][selectedToken]}
+{@body const selectedFocus = selectedRow.indexOf(Math.max(...selectedRow))}
+{@body const selectedSum = selectedRow.reduce((a,b)=>a+b,0)}
+{@body const maskedCount = mask[selectedToken].filter(Boolean).length}
+{@body const tempEffect = [0.3,0.6,1,1.5,2.5].map(t=>({x:t,entropy:-DIL.math.softmax(scores[head][selectedToken],t,mask[selectedToken]).reduce((a,p)=>a+(p>0?p*Math.log(p):0),0)}))}
+{@body const cubeColor = v=>v>=0?'#607c9e':'#cc9553'}
+{@body const cubeSize = v=>0.25+Math.min(Math.abs(v),1.2)*0.9}
+{@body const tokenX = i=>(i-2.5)*1.4}
+{@body const featureZ = j=>(j-1.5)*1.4}
+{@body const buildStack = (mat,baseY,prefix)=>mat.reduce((acc,row,i)=>[...acc,...row.map((v,j)=>({id:prefix+'-'+i+'-'+j,type:'box',position:[tokenX(i),baseY+0.5,featureZ(j)],size:[cubeSize(v),cubeSize(v),cubeSize(v)],color:cubeColor(v),opacity:0.92,label:tokens[i]+'·d'+j,value:v.toFixed(3)}))],[])}
+{@body const stackXp = buildStack(Xp,0,'xp')}
+{@body const stackQ = buildStack(Q,2.2,'q')}
+{@body const stackK = buildStack(K,4.4,'k')}
+{@body const stackV = buildStack(V,6.6,'v')}
+{@body const stackZ = buildStack(Z,8.8,'z')}
+{@body const stackFinal = buildStack(final,11,'fin')}
+{@body const attentionEdges = A[head].reduce((acc,r,i)=>[...acc,...r.map((w,j)=>w>0.05?{id:'e-'+i+'-'+j,type:'line',points:[[tokenX(i),0.5,featureZ(0)],[tokenX(j),0.5,featureZ(0)]],color:w>0.4?'#8f83b0':'#6c7e91',width:1+w*6}:null).filter(Boolean)],[])}
+{@body const tokenLabels = tokens.map((t,i)=>({id:'lbl-'+i,type:'label',position:[tokenX(i),-0.9,featureZ(0)],text:t,color:'#292724'}))}
+{@body const stageLabels = [{id:'sl-xp',type:'label',position:[-5.2,0.5,featureZ(0)],text:'Xp',color:'#292724'},{id:'sl-q',type:'label',position:[-5.2,2.7,featureZ(0)],text:'Q',color:'#292724'},{id:'sl-k',type:'label',position:[-5.2,4.9,featureZ(0)],text:'K',color:'#292724'},{id:'sl-v',type:'label',position:[-5.2,7.1,featureZ(0)],text:'V',color:'#292724'},{id:'sl-z',type:'label',position:[-5.2,9.3,featureZ(0)],text:'Z',color:'#292724'},{id:'sl-fin',type:'label',position:[-5.2,11.5,featureZ(0)],text:'out',color:'#292724'}]}
+{@body const showStack = s=>step===s}
+{@body const sceneObjects = [...(showStack(0)?stackXp:[]),...(showStack(1)?[...stackQ,...stackK,...stackV]:[]),...(step===3?attentionEdges:[]),...(step===5?stackZ:[]),...(step===6?stackFinal:[]),...tokenLabels,...stageLabels]}
+
+<box>
+<title>Transformer 三维张量空间：从词向量到输出的堆叠</title>
+<text>把每个 token 的 4 维表示画成一条「特征轴」上的立方体堆。**坐标轴含义**：X 轴 = 6 个 token 的位置（真实 token 索引），Z 轴 = 4 个特征维度（真实 d_model 维度），Y 轴 = 网络层深（真实阶段，非装饰）。立方体**大小与颜色**编码该维度数值：蓝色为正、琥珀色为负，越大越亮表示绝对值越大。拖动可旋转、缩放、点击立方体查看数值。</text>
+<formula content={String.raw`X_p[i,j]=X[i,j]+\text{PE}[i,j],\quad Q=X_pW_Q,\ K=X_pW_K,\ V=X_pW_V`}/>
+
+<row>
+<stepper value={step} onChange={setStep} max={6} label="阶段"/>
+</row>
+
+<row>
+<select label="注意力头" value={head} options={[{label:'头 1',value:0},{label:'头 2',value:1}]} onChange={v=>setHead(v)}/>
+<slider label="Softmax 温度" min={0.2} max={3} step={0.1} value={temperature} onChange={v=>setTemperature(v)}/>
+<select label="掩码模式" value={causal} options={[{label:'双向注意力',value:false},{label:'因果掩码',value:true}]} onChange={v=>setCausal(v)}/>
+<select label="选中 token" value={selectedToken} options={tokens.map((t,i)=>({label:t,value:i}))} onChange={v=>setSelectedToken(v)}/>
+</row>
+
+<caption>当前阶段：{stages[step]}　·　头 {head+1}　·　温度 {temperature.toFixed(1)}　·　{causal?'因果掩码':'双向注意力'}</caption>
+
+<row>
+<metric label="选中行权重和" value={selectedSum.toFixed(6)}/>
+<metric label="最关注 token" value={tokens[selectedFocus]}/>
+<metric label="该权重" value={selectedRow[selectedFocus].toFixed(4)}/>
+<metric label="被掩码数" value={maskedCount}/>
+</row>
+
+<scene objects={sceneObjects} caption="X=token 位置，Z=特征维度，Y=网络阶段；立方体大小/颜色=数值" camera={[9,10,11]} selected={selectedCube} onSelect={id=>setSelectedCube(id)}/>
+
+{#if selectedCube}
+<caption>选中：{selectedCube}　（蓝色=正、琥珀=负；大小=|值|）</caption>
+{/if}
+
+{#if step===0}
+<text><bold>阶段 1：词向量 + 位置编码。</bold>底层 Xp 堆叠：每个 token 的 4 维向量沿 Z 轴排开，逐元素加上正弦位置编码，让模型感知顺序。</text>
+<matrix data={round(Xp)} label="Xp 词向量+位置编码 [6,4]" rowLabels={tokens} columnLabels={['d0','d1','d2','d3']}/>
+{:else if step===1}
+<text><bold>阶段 2：Q/K/V 投影。</bold>三层新堆叠出现在 Y=2.2/4.4/6.6 处：同一组 Xp 分别乘 W_Q、W_K、W_V，得到查询、键、值。观察同一 token 在三个空间里数值分布的不同。</text>
+<matrix data={round(Q)} label="Q 查询 [6,4]" rowLabels={tokens} columnLabels={['d0','d1','d2','d3']}/>
+<matrix data={round(K)} label="K 键 [6,4]" rowLabels={tokens} columnLabels={['d0','d1','d2','d3']}/>
+<matrix data={round(V)} label="V 值 [6,4]" rowLabels={tokens} columnLabels={['d0','d1','d2','d3']}/>
+{:else if step===2}
+<text><bold>阶段 3：缩放点积。</bold>每个头取 2 维，Q 与 K 点积衡量匹配度，除以 √d_k=√2 防止 softmax 饱和。</text>
+<formula content={String.raw`S_h=\frac{Q_hK_h^\top}{\sqrt{d_k}}`}/>
+<matrix data={round(scores[head])} label={`头 ${head+1} 缩放得分 S [6,6]`} rowLabels={tokens} columnLabels={tokens}/>
+{:else if step===3}
+<text><bold>阶段 4：Softmax 注意力。</bold>回到 Xp 平面（Y≈0.5），紫色/灰色连线表示注意力流向：越粗越亮表示权重越大。每行权重和恒为 1，掩码位置为 0。</text>
+<formula content={String.raw`A_h=\text{softmax}(S_h),\quad \sum_j A_h[i,j]=1`}/>
+<heatmap data={A[head]} label={`头 ${head+1} 注意力权重 A`} rowLabels={tokens} columnLabels={tokens} min={0} max={1} selected={[selectedToken,selectedFocus]} selectedRow={selectedToken} onSelect={(r,c)=>setSelectedToken(r)}/>
+<token-graph tokens={tokens} weights={A[head]} selected={selectedToken} onSelect={i=>setSelectedToken(i)}/>
+<caption>行和校验：{rowSum.map(v=>v.toFixed(4)).join('  ')}　·　两头最大差异 {headDiffMax.toFixed(4)}</caption>
+{:else if step===4}
+<text><bold>阶段 5：多头拼接与输出投影。</bold>每个头独立算 A_hV_h 得 2 维，沿特征维拼接成 4 维，再乘 W_O 融合。多头让模型从不同子空间捕捉不同关系。</text>
+<formula content={String.raw`O=\text{Concat}(\text{head}_1,\dots,\text{head}_H)W_O`}/>
+<matrix data={round(headOut[head])} label={`头 ${head+1} 输出 [6,2]`} rowLabels={tokens} columnLabels={['h0','h1']}/>
+<matrix data={round(O)} label="输出投影 O [6,4]" rowLabels={tokens} columnLabels={['d0','d1','d2','d3']}/>
+{:else if step===5}
+<text><bold>阶段 6：残差 + LayerNorm。</bold>Y=8.8 处出现 Z 堆叠：先把注意力输出加回输入，再逐 token 归一化，每行均值≈0、方差≈1。</text>
+<formula content={String.raw`Z=\text{LayerNorm}(X_p+O)`}/>
+<matrix data={round(Z)} label="Z = LayerNorm(Xp+O) [6,4]" rowLabels={tokens} columnLabels={['d0','d1','d2','d3']}/>
+<caption>归一化后每行均值：{Z.map(r=>(r.reduce((a,b)=>a+b,0)/4).toFixed(3)).join('  ')}</caption>
+{:else}
+<text><bold>阶段 7：前馈网络。</bold>最顶层（Y=11）是最终输出：逐 token 的 MLP 先升维、ReLU、再降维，最后加残差。对比底层 Xp 与顶层 out，可见表示被逐步变换。</text>
+<formula content={String.raw`\text{out}=Z+\text{ReLU}(ZW_1+b_1)W_2+b_2`}/>
+<matrix data={round(final)} label="最终输出 [6,4]" rowLabels={tokens} columnLabels={['d0','d1','d2','d3']}/>
+{/if}
+
+<disclosure label="实现细节与真实模型差异">
+<text>本演示使用固定种子权重，维度极小（d_model=4、2 头、每头 2 维、2 层 FFN）。三维场景中 Y 轴是真实的网络阶段层深，X 轴是真实 token 索引，Z 轴是真实特征维度，立方体大小与颜色编码真实数值——没有任何装饰性维度。真实语言模型有数十层、数千维、数十头，并使用 GELU/SwiGLU、RMSNorm、RoPE 等。所有数值在浏览器内确定性重算。</text>
+</disclosure>
+</box>
