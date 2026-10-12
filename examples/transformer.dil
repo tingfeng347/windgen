@@ -1,0 +1,81 @@
+# Transformer：逐步追踪 token 的计算
+
+这是 6 个 token、4 维表示、2 个注意力头的确定性微型网络。改变参数，观察每个中间矩阵如何一起变化；权重仅用于教学。
+
+{@body const tokens = ['我','喜欢','学习','自然','语言','处理']}
+{@body const [step,setStep] = DIL.useState(0)}
+{@body const [head,setHead] = DIL.useState(0)}
+{@body const [token,setToken] = DIL.useState(0)}
+{@body const [temperature,setTemperature] = DIL.useState(1)}
+{@body const [causal,setCausal] = DIL.useState(false)}
+{@body const [cell,setCell] = DIL.useState([0,0])}
+{@body const E = [[1,0,0.5,0],[0,1,0,0.5],[0.5,0,1,0],[0,0.5,0,1],[1,0.5,0,0],[0,1,0.5,0]]}
+{@body const P = tokens.map((_,i)=>[Math.sin(i),Math.cos(i),Math.sin(i/100),Math.cos(i/100)])}
+{@body const X = DIL.math.add(E,P)}
+{@body const Wq = [[0.5,0.1,0.2,0],[0,0.6,0,0.1],[0.2,0,0.7,0],[0,0.1,0,0.5]]}
+{@body const Wk = [[0.4,0,0.1,0.2],[0.1,0.5,0.1,0],[0,0.2,0.6,0.1],[0.2,0,0.1,0.4]]}
+{@body const Wv = [[0.6,0.1,0,0],[0,0.5,0.1,0],[0.1,0,0.5,0.1],[0,0.1,0,0.6]]}
+{@body const Wo = [[0.5,0,0.1,0],[0.1,0.5,0,0],[0,0.1,0.5,0],[0,0,0.1,0.5]]}
+{@body const Q = DIL.math.matmul(X,Wq)}
+{@body const K = DIL.math.matmul(X,Wk)}
+{@body const V = DIL.math.matmul(X,Wv)}
+{@body const qs = DIL.math.splitHeads(Q,2)}
+{@body const ks = DIL.math.splitHeads(K,2)}
+{@body const vs = DIL.math.splitHeads(V,2)}
+{@body const scores = qs.map((q,h)=>DIL.math.matmul(q,DIL.math.transpose(ks[h])).map(row=>row.map(v=>v/Math.sqrt(2))))}
+{@body const attention = scores.map(s=>s.map((row,i)=>DIL.math.softmax(row,temperature,row.map((_,j)=>causal&&j>i))))}
+{@body const heads = attention.map((a,h)=>DIL.math.matmul(a,vs[h]))}
+{@body const concat = DIL.math.concatHeads(heads)}
+{@body const projected = DIL.math.matmul(concat,Wo)}
+{@body const residual = DIL.math.add(X,projected)}
+{@body const normalized = DIL.math.layerNorm(residual)}
+{@body const W1 = Array.from({length:4},(_,i)=>Array.from({length:8},(_,j)=>Math.sin((i+1)*(j+2))*0.3))}
+{@body const W2 = Array.from({length:8},(_,i)=>Array.from({length:4},(_,j)=>Math.cos((i+2)*(j+1))*0.3))}
+{@body const hidden = DIL.math.matmul(normalized,W1).map(row=>row.map(v=>Math.max(0,v)))}
+{@body const final = DIL.math.add(normalized,DIL.math.matmul(hidden,W2))}
+{@body const stages = ['词向量与位置编码','Q / K / V 投影','缩放点积与掩码','softmax 与信息汇聚','多头拼接与输出投影','残差与 LayerNorm','前馈网络与输出']}
+<box>
+<stepper label="计算阶段" value={step} max={6} onChange={setStep}/>
+<title>{stages[step]}</title>
+<row>
+<select label="注意力头" value={head} options={[{label:'头 0',value:0},{label:'头 1',value:1}]} onChange={setHead}/>
+<select label="Query token" value={token} options={tokens.map((label,value)=>({label,value}))} onChange={v=>{setToken(v);setCell([v,cell[1]])}}/>
+<select label="注意力掩码" value={causal} options={[{label:'双向',value:false},{label:'因果',value:true}]} onChange={setCausal}/>
+</row>
+<slider label="softmax 温度" value={temperature} min={0.2} max={3} step={0.1} onChange={setTemperature}/>
+{#if step===0}
+<formula content={String.raw`X=E+P,\quad X\in\mathbb{R}^{6\times4}`}/>
+<matrix label="词向量 E" data={E} rowLabels={tokens}/>
+<matrix label="位置编码 P" data={P} rowLabels={tokens}/>
+<matrix label="输入 X" data={X} rowLabels={tokens}/>
+{:else if step===1}
+<formula content={String.raw`Q=XW_Q,\ K=XW_K,\ V=XW_V,\quad Q_h,K_h,V_h\in\mathbb{R}^{6\times2}`}/>
+<matrix label="Q 当前头" data={qs[head]} rowLabels={tokens} selectedRow={token}/>
+<matrix label="K 当前头" data={ks[head]} rowLabels={tokens}/>
+<matrix label="V 当前头" data={vs[head]} rowLabels={tokens}/>
+{:else if step===2}
+<formula content={String.raw`S_h=Q_hK_h^\top/\sqrt{2},\quad M_{ij}=-\infty\ (j>i)`}/>
+<matrix label="缩放点积 S" data={scores[head]} rowLabels={tokens} columnLabels={tokens} selectedRow={token}/>
+<matrix label="掩码后的分数" data={scores[head].map((row,i)=>row.map((v,j)=>causal&&j>i?'−∞':v))} rowLabels={tokens} columnLabels={tokens}/>
+{:else if step===3}
+<formula content={String.raw`A_{ij}=\mathrm{softmax}_j((S_{ij}+M_{ij})/T),\quad H_h=A_hV_h`}/>
+<heatmap label="注意力权重 A" data={attention[head]} rowLabels={tokens} columnLabels={tokens} min={0} max={1} selectedRow={token} selected={cell} onSelect={(i,j)=>{setToken(i);setCell([i,j])}}/>
+<row><metric label="选中单元格权重" value={attention[head][cell[0]][cell[1]].toFixed(6)}/><metric label="Query 行权重和" value={attention[head][token].reduce((a,b)=>a+b,0).toFixed(6)}/></row>
+<token-graph label="所选 Query 的信息汇聚" tokens={tokens} weights={attention[head]} selected={token} onSelect={v=>{setToken(v);setCell([v,cell[1]])}}/>
+<matrix label="当前头输出" data={heads[head]} rowLabels={tokens}/>
+{:else if step===4}
+<formula content={String.raw`C=\mathrm{Concat}(H_0,H_1)\in\mathbb{R}^{6\times4},\quad O=CW_O`}/>
+<matrix label="多头拼接 C" data={concat} rowLabels={tokens}/>
+<matrix label="输出投影 O" data={projected} rowLabels={tokens}/>
+{:else if step===5}
+<formula content={String.raw`R=X+O,\quad Z_{ij}=(R_{ij}-\mu_i)/\sqrt{\sigma_i^2+10^{-5}}`}/>
+<matrix label="残差 R" data={residual} rowLabels={tokens}/>
+<matrix label="LayerNorm Z" data={normalized} rowLabels={tokens}/>
+{:else}
+<formula content={String.raw`H=\mathrm{ReLU}(ZW_1),\quad Y=Z+HW_2`}/>
+<matrix label="隐藏层 H" data={hidden} rowLabels={tokens}/>
+<matrix label="最终输出 Y" data={final} rowLabels={tokens}/>
+{/if}
+<disclosure label="查看计算实现"><code>const A = heads.map((q,h) => scaledScores(q,k[h]).map((row,i) => softmax(row,T,mask(i)))); const C = concatHeads(A.map((a,h) => matmul(a,v[h]))); const Z = layerNorm(add(X,matmul(C,Wo))); const Y = add(Z,matmul(relu(matmul(Z,W1)),W2));</code></disclosure>
+<caption>每个头分别计算自己的注意力矩阵，再沿特征维拼接。内部计算保持完整精度，仅显示时四舍五入。</caption>
+</box>

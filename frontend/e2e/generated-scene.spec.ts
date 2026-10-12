@@ -1,0 +1,25 @@
+import {test,expect} from '@playwright/test'
+import {readFileSync} from 'node:fs'
+const source=readFileSync('test-fixtures/transformer-scene.dil','utf8')
+test('real generated tensor lesson hides metadata and keeps stages and numerical controls usable',async({page})=>{
+ const convo={id:'scene-regression',title:'生成张量验收',updated:1,revisions:[{id:'scene-r',prompt:'生成3D演示',source,state:{},mode:'live',status:'complete',created:1}]}
+ await page.route('**/api/conversations**',route=>route.fulfill({json:route.request().method()==='PUT'?{ok:true}:new URL(route.request().url()).pathname==='/api/conversations'?[convo]:convo}))
+ await page.goto('/')
+ await page.getByRole('button',{name:'生成张量验收',exact:true}).click()
+ await expect(page.getByText('Xp 词向量+位置编码 [6,4]',{exact:true})).toBeVisible()
+ await expect(page.locator('.lesson-body')).not.toContainText('windgen-state')
+ await page.getByLabel('注意力头',{exact:true}).selectOption('1')
+ await page.getByLabel('掩码模式',{exact:true}).selectOption('true')
+ for(let i=0;i<3;i++)await page.getByRole('button',{name:'单步',exact:true}).click()
+ await expect(page.locator('.teaching-heatmap button')).toHaveCount(36)
+ await expect(page.getByRole('button',{name:'头 2 注意力权重 A 我 → 处理: 0',exact:true})).toBeVisible()
+ for(let i=0;i<3;i++)await page.getByRole('button',{name:'单步',exact:true}).click()
+ await expect(page.getByText('最终输出 [6,4]',{exact:true})).toBeVisible()
+ await expect(page.locator('.lesson-issues')).toHaveCount(0)
+ await page.getByRole('tab',{name:'状态',exact:true}).click()
+ const state=JSON.parse(await page.locator('.source-view').innerText());expect(state.step).toBe(6);expect(state.head).toBe(1);expect(state.causal).toBe(true)
+ await page.getByRole('tab',{name:'交互教程',exact:true}).click()
+ await page.getByRole('button',{name:'复位视角',exact:true}).click()
+ await page.locator('[data-testid="scene"] canvas').waitFor({state:'visible'})
+ await page.locator('[data-testid="scene"]').screenshot({path:'../data/diagnostics/generated-scene-fixed.png'})
+})

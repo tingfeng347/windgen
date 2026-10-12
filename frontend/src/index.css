@@ -95,3 +95,49 @@
 @media(max-width:600px){.appearance-panel{padding:23px 20px;gap:22px}.appearance-settings-grid{grid-template-columns:1fr;gap:22px}.appearance-mode{grid-template-columns:1fr 1fr}.appearance-mode button{height:52px;padding:0 11px;gap:8px}.appearance-accents{grid-template-columns:repeat(3,minmax(0,1fr))}.appearance-accents button{height:43px;padding:0 8px;gap:6px}.model-providers.settings-nav{flex-wrap:wrap}.settings-nav>.provider-option{flex:1;min-width:90px}.settings-nav .provider-subnav{width:100%;justify-content:center}.settings-nav .provider-subnav{display:flex;align-items:center;gap:4px;margin:8px 0 0;padding:0;border:0}.settings-nav .provider-subnav .provider-label,.settings-nav .provider-note{display:none}.provider-subnav .provider-option{padding:8px}.provider-subnav .provider-option strong{font-size:10px}.provider-subnav .provider-symbol{display:none}}
 
 :root[data-theme="dark"] .welcome>svg,:root[data-theme="dark"] .assistant-heading svg{color:var(--foreground)}
+
+/* Interactive teaching primitives share the host's theme and remain data-only. */
+.lesson-list { padding-inline-start: 24px; margin-block: 14px; }
+.lesson-list li { padding-inline-start: 4px; margin-block: 8px; }
+.lesson-list p { margin-block: 4px; }
+.inline-math { display: inline; margin-inline: 4px; }
+.teaching-matrix,.token-graph { margin: 24px 0; min-width: 0; }
+.teaching-matrix figcaption,.token-graph figcaption { display: flex; justify-content: space-between; gap: 12px; align-items: baseline; margin-bottom: 12px; }
+.teaching-matrix figcaption span,.token-graph figcaption span { font-size: 12px; color: var(--muted-foreground); }
+.matrix-scroll { max-width: 100%; overflow-x: auto; border: 1px solid var(--border); border-radius: 8px; }
+.matrix-scroll table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; font-size: 12px; }
+.matrix-scroll th { padding: 10px; font-weight: 500; white-space: nowrap; background: var(--secondary); }
+.matrix-scroll td { padding: 2px; min-width: 60px; border-top: 1px solid var(--border); }
+.matrix-scroll button { width: 100%; padding: 10px 8px; border-radius: 4px; color: var(--foreground); background: color-mix(in srgb,var(--primary) var(--cell-fill,0%),var(--background)); cursor: pointer; }
+.matrix-scroll button:hover,.matrix-scroll button.selected { outline: 2px solid var(--primary); outline-offset: -2px; }
+.matrix-row-selected th { color: var(--primary); font-weight: 700; }
+.heatmap-scale { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 10px; font-size: 12px; }
+.heatmap-scale-bar { width: 70px; height: 8px; background: linear-gradient(90deg,var(--background),color-mix(in srgb,var(--primary) 35%,var(--background))); border: 1px solid var(--border); }
+.heatmap-scale small { color: var(--muted-foreground); margin-left: auto; }
+.token-options { display: flex; flex-wrap: wrap; gap: 6px; margin-block: 12px; }
+.token-options button { padding: 8px 12px; border: 1px solid var(--border); border-radius: 6px; color: var(--foreground); background: var(--background); cursor: pointer; }
+.token-options button[aria-pressed=true] { color: var(--primary); border-color: var(--primary); background: var(--secondary); }
+.token-graph svg { display: block; width: 100%; max-height: 380px; font-size: 13px; }
+.lesson-disclosure { border-block: 1px solid var(--border); padding-block: 12px; margin-block: 20px; }
+.lesson-disclosure summary { cursor: pointer; font-weight: 500; }
+.lesson-issues { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; padding: 14px 16px; margin: 16px 0; border: 1px solid var(--border); border-radius: 8px; background: var(--secondary); }
+.lesson-issues p { margin: 0 0 6px; }
+.lesson-issues ul { padding-left: 18px; margin: 8px 0; font-size: 12px; overflow-wrap: anywhere; }
+@media(max-width:640px) { .lesson-issues { flex-direction: column; } .token-graph figcaption { align-items: start; flex-direction: column; gap: 4px; } .token-graph svg { font-size:24px; } }
+.chat-reply {white-space:pre-wrap;line-height:1.85;padding:12px 0 32px;overflow-wrap:anywhere;}
+.flow-diagram {margin:22px 0;border:1px solid var(--border);border-radius:14px;padding:16px;background:var(--card);}
+.flow-toolbar,.flow-toolbar>div {display:flex;align-items:center;gap:10px;justify-content:space-between;}
+.flow-toolbar select {background:var(--background);border:1px solid var(--border);border-radius:6px;padding:5px;color:var(--foreground);}
+.flow-diagram > svg {display:block;width:100%;min-width:440px;color:var(--primary);}
+.flow-diagram {overflow-x:auto;}
+.flow-node {cursor:pointer;outline:none;}
+.flow-node rect {fill:var(--background);stroke:var(--border);stroke-width:1.5;}
+.flow-node.selected rect,.flow-node:focus-visible rect {stroke:var(--primary);stroke-width:2.5;}
+.flow-node text {fill:var(--foreground);font-size:13px;pointer-events:none;}
+.flow-node .flow-value {font-size:11px;fill:var(--muted-foreground);}
+.flow-edge text {fill:var(--muted-foreground);font-size:11px;}
+.flow-diagram figcaption {font-size:12px;color:var(--muted-foreground);margin-top:8px;}
+
+.node-column:has(> .flow-diagram) {min-width:0;flex:1 1 440px;max-width:100%;}
+.flow-diagram {min-width:0;max-width:100%;}
+.flow-toolbar {flex-wrap:wrap;}

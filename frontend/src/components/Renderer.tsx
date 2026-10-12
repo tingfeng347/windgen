@@ -3,6 +3,8 @@ import katex from 'katex'
 import { Play, Pause, StepForward, RotateCcw } from 'lucide-react'
 import { Button } from './ui/button'
 import { Slider } from './ui/slider'
+import { FlowDiagram } from './FlowDiagram'
+import { Matrix, TokenGraph } from './TeachingVisuals'
 import type { SceneObject } from './Scene'
 const Scene=lazy(()=>import('./Scene').then(module=>({default:module.Scene})))
 import type { Node } from '../types'
@@ -10,10 +12,10 @@ import type { Node } from '../types'
 export type Invoke=(handler:unknown,args:unknown[])=>void
 const num=(v:unknown,d=0)=>typeof v==='number'&&Number.isFinite(v)?v:d
 const text=(v:unknown)=>v===null||v===undefined?'':typeof v==='object'?JSON.stringify(v):String(v)
-function Formula({content}:{content:string}) {
+function Formula({content,inline=false}:{content:string;inline?:boolean}) {
   let html=''
-  try {html=katex.renderToString(content,{throwOnError:false,displayMode:true,trust:false,maxExpand:1000})}catch{return <code>{content}</code>}
-  return <div className="formula" dangerouslySetInnerHTML={{__html:html}}/>
+  try {html=katex.renderToString(content,{throwOnError:false,displayMode:!inline,trust:false,maxExpand:1000})}catch{return <code>{content}</code>}
+  return inline?<span className="inline-math" dangerouslySetInnerHTML={{__html:html}}/>:<div className="formula" dangerouslySetInnerHTML={{__html:html}}/>
 }
 function Stepper({value,max,onChange,label}:{value:number;max:number;onChange:(v:number)=>void;label:string}) {
   const [playing,setPlaying]=useState(false),[speed,setSpeed]=useState(1)
@@ -49,17 +51,28 @@ export function Renderer({node,invoke}:{node:Node|null;invoke:Invoke}) {
     case 'text':return <p>{children}</p>
     case 'caption':case 'label':return <p className="caption">{children}</p>
     case 'bold':return <strong>{children}</strong>
+    case 'list':return p.marker==='number'?<ol className="lesson-list">{children}</ol>:<ul className="lesson-list">{children}</ul>
+    case 'list-item':return <li>{children}</li>
+    case 'table-row':return <tr>{children}</tr>
+    case 'table-cell':return <td>{children}</td>
+    case 'disclosure':return <details className="lesson-disclosure" open={p.open===true}><summary>{text(p.label)||'实现细节'}</summary>{children}</details>
+    case 'progress':return <progress max={num(p.max,1)} value={num(p.value)} aria-label={text(p.label)||'进度'}/>
     case 'badge':return <span className="badge">{children}</span>
     case 'divider':return <hr/>
     case 'spacer':return <div className="spacer"/>
     case 'button':return <Button variant={p.variant==='secondary'?'secondary':'default'} disabled={p.disabled===true} onClick={()=>call('onClick')}>{children}</Button>
     case 'code':return <pre className="code-block"><code>{content??children}</code></pre>
     case 'formula':return <Formula content={content??''}/>
+    case 'math':return <Formula content={content??''} inline/>
+    case 'matrix':case 'heatmap':return <Matrix p={p} heatmap={node.t==='heatmap'} onSelect={(row,column)=>call('onSelect',row,column)}/>
+    case 'flow-diagram':return <FlowDiagram p={p} onSelect={id=>call('onSelect',id)}/>
+    case 'token-graph':return <TokenGraph p={p} onSelect={index=>call('onSelect',index)}/>
     case 'metric':return <div className="metric"><span>{text(p.label)}</span><strong>{text(p.value)}</strong></div>
-    case 'slider':return <label className="parameter"><span>{text(p.label)}<output>{text(p.value)}</output></span><Slider min={num(p.min)} max={num(p.max,100)} step={num(p.step,1)} value={[num(p.value)]} onValueChange={v=>call('onChange',v[0])}/></label>
+    case 'slider':return <label className="parameter"><span>{text(p.label)}<output>{text(p.value)}</output></span><Slider aria-label={text(p.label)} min={num(p.min)} max={num(p.max,100)} step={num(p.step,1)} value={[num(p.value)]} onValueChange={v=>call('onChange',v[0])}/></label>
     case 'input':case 'textarea':return <label className="parameter"><span>{text(p.label)}</span><input type={p.type==='number'?'number':'text'} value={text(p.value)} onChange={e=>call('onChange',p.type==='number'?Number(e.target.value):e.target.value)}/></label>
     case 'checkbox':return <label className="checkbox"><input type="checkbox" checked={p.value===true} onChange={e=>call('onChange',e.target.checked)}/>{text(p.label)}{children}</label>
-    case 'select':return <label className="parameter"><span>{text(p.label)}</span><select value={text(p.value)} onChange={e=>call('onChange',e.target.value)}>{(Array.isArray(p.options)?p.options:[]).map((o:unknown,i)=>{const opt=typeof o==='object'&&o?o as Record<string,unknown>:{label:o,value:o};return <option key={i} value={text(opt.value)}>{text(opt.label)}</option>})}</select></label>
+    case 'select':{const options=(Array.isArray(p.options)?p.options:[]).map((o:unknown)=>typeof o==='object'&&o?o as Record<string,unknown>:{label:o,value:o});return <label className="parameter"><span>{text(p.label)}</span><select aria-label={text(p.label)} value={text(p.value)} onChange={e=>call('onChange',options.find(o=>text(o.value)===e.target.value)?.value??e.target.value)}>{options.map((opt,i)=><option key={i} value={text(opt.value)}>{text(opt.label)}</option>)}</select></label>}
+    case 'segmented-control':return <div className="token-options" role="group" aria-label={text(p.label)}>{(Array.isArray(p.options)?p.options:[]).map((o:any,i)=>{const opt=typeof o==='object'&&o?o:{label:o,value:o};return <button key={i} aria-pressed={opt.value===p.value} onClick={()=>call('onChange',opt.value)}>{text(opt.label)}</button>})}</div>
     case 'stepper':return <Stepper value={Math.max(0,num(p.value))} max={Math.max(0,Math.min(500,num(p.max,30)))} onChange={v=>call('onChange',v)} label={text(p.label)}/>
     case 'scene':return <Suspense fallback={<p className="caption">正在加载三维渲染器…</p>}><Scene objects={p.objects||objectsFromNodes(node.c||[])} camera={p.camera} selected={text(p.selected)} onSelect={id=>call('onSelect',id)} caption={text(p.caption)}/></Suspense>
     case 'chart':return <Chart p={p}/>
